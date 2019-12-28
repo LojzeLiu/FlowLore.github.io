@@ -330,7 +330,7 @@
 </table>
 <h2 id="import-基于本地模板导入"><a href="#import-基于本地模板导入" class="headerlink" title="import (基于本地模板导入)"></a>import (基于本地模板导入)</h2><h3 id="功能-5"><a href="#功能-5" class="headerlink" title="功能"></a>功能</h3><h3 id="调用格式-5"><a href="#调用格式-5" class="headerlink" title="调用格式"></a>调用格式</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker import [OPTIONS] file |URL|- [REPOSITORY[:TAG]]</span><br></pre></td></tr></table></figure>
 <ol>
-<li>示例<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> cat ubuntu-14.04-x86_64-minimal.tar.gz | docker import - ubuntu:14.04</span><br></pre></td></tr></table></figure>
+<li>示例<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cat ubuntu-14.04-x86_64-minimal.tar.gz | docker import - ubuntu:14.04</span></span><br></pre></td></tr></table></figure>
 </li>
 </ol>
 <h2 id="save-导出镜像"><a href="#save-导出镜像" class="headerlink" title="save (导出镜像)"></a>save (导出镜像)</h2><h3 id="功能-6"><a href="#功能-6" class="headerlink" title="功能"></a>功能</h3><p>导出镜像到本地文件</p>
@@ -376,7 +376,7 @@
 </tbody>
 </table>
 <ol start="2">
-<li>示例<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> docker load --input ubuntu_14.04.tar</span><br></pre></td></tr></table></figure>
+<li>示例<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker load --input ubuntu_14.04.tar</span></span><br></pre></td></tr></table></figure>
 </li>
 </ol>
 <h2 id="tag-添加新标签"><a href="#tag-添加新标签" class="headerlink" title="tag (添加新标签)"></a>tag (添加新标签)</h2><h3 id="功能-8"><a href="#功能-8" class="headerlink" title="功能"></a>功能</h3><p>创建一个新的标签</p>
@@ -432,7 +432,7 @@
 <h3 id="示例-2"><a href="#示例-2" class="headerlink" title="示例"></a>示例</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker login -u &#123;登录账号&#125; -p &#123;你的网易云密码&#125; hub.c.163.com</span><br></pre></td></tr></table></figure>
 <h1 id="容器操作"><a href="#容器操作" class="headerlink" title="容器操作"></a>容器操作</h1><h2 id="create-新建容器"><a href="#create-新建容器" class="headerlink" title="create (新建容器)"></a>create (新建容器)</h2><h3 id="功能-11"><a href="#功能-11" class="headerlink" title="功能"></a>功能</h3><p>新建一个容器</p>
 <h3 id="调用格式-11"><a href="#调用格式-11" class="headerlink" title="调用格式"></a>调用格式</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker create [OPTIONS] IMAGE [COMMAND] [ARG...]</span><br></pre></td></tr></table></figure>
-<h3 id="示例-3"><a href="#示例-3" class="headerlink" title="示例"></a>示例</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> docker create -it ubuntu:latest</span><br></pre></td></tr></table></figure>
+<h3 id="示例-3"><a href="#示例-3" class="headerlink" title="示例"></a>示例</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker create -it ubuntu:latest</span></span><br></pre></td></tr></table></figure>
 <table>
 <thead>
 <tr>
@@ -516,7 +516,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="调用示例"><a href="#调用示例" class="headerlink" title="调用示例"></a>调用示例</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> docker run -it ubuntu:14.04 /bin/bash</span><br></pre></td></tr></table></figure>
+<h3 id="调用示例"><a href="#调用示例" class="headerlink" title="调用示例"></a>调用示例</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker run -it ubuntu:14.04 /bin/bash</span></span><br></pre></td></tr></table></figure>
 <ol>
 <li><p>示例说明</p>
 <p>启动一个bash终端，并允许用户进行交互。</p>
@@ -579,7 +579,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="示例-4"><a href="#示例-4" class="headerlink" title="示例"></a>示例</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> docker exec -it 243c32535da7 /bin/bash</span><br></pre></td></tr></table></figure>
+<h3 id="示例-4"><a href="#示例-4" class="headerlink" title="示例"></a>示例</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker <span class="built_in">exec</span> -it 243c32535da7 /bin/bash</span></span><br></pre></td></tr></table></figure>
 <ol>
 <li><p>示例说明</p>
 <p>进入到正在运行的容器中，并启动一个bash</p>
@@ -661,7 +661,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="示例-5"><a href="#示例-5" class="headerlink" title="示例"></a>示例</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> docker import test_for_run.tar - test/ubuntu:v1.0</span><br></pre></td></tr></table></figure>
+<h3 id="示例-5"><a href="#示例-5" class="headerlink" title="示例"></a>示例</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker import test_for_run.tar - <span class="built_in">test</span>/ubuntu:v1.0</span></span><br></pre></td></tr></table></figure>
 
     </div>
   </div>
