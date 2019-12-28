@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
+  
+    <meta name="robots" content="noindex">
+  
+  
+  
+  <title>舍予书</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="舍予书,Linux,Emacs配置,软件开发,C++,分享知识,编程知识,自学编程,linux开发,刘洋的博客,lojze,lojzeliu">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+    <meta name="description" content="舍予书-是我在工作和生活中的一些心得和经验，在这里分享给大家，期望能够对你有所帮助">
+  
+
+  
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">舍予书</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              主页
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              归档
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>抓到我</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/LojzeLiu" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.zhihu.com/people/LojzeLiu/activities" 
+                    target="_blank"
+                  >
+                    知乎
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+<div class="container home-index">
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/mysql-order-by-and-limit-2/">
+        <span>MySQL 实现将所有数据排序后分页</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2018-02-27
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2018-02-27
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/数据库/">
+            数据库
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="mysql-order-by-and-limit-2"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/数据库/">
+              数据库
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/MySQL/">
+                  #MySQL
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/MySQL分页/">
+                  #MySQL分页
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/MySQL声明变量/">
+                  #MySQL声明变量
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/MySQL排序/">
+                  #MySQL排序
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/MySQL查询/">
+                  #MySQL查询
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="mysql-order-by-and-limit-2"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/concept-of-system-programming/">
+        <span>系统编程概念</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2017-12-15
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2017-12-15
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/Linux-UNIX-系统编程/">
+            Linux/UNIX 系统编程
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="concept-of-system-programming"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/Linux-UNIX-系统编程/">
+              Linux/UNIX 系统编程
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/linux编程/">
+                  #linux编程
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/Linux/">
+                  #Linux
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/Linux可移植性，UNIX可移植性/">
+                  #Linux可移植性，UNIX可移植性
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/Linux开发/">
+                  #Linux开发
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/Linux系统数据类型，Linux如何确定glibc版本/">
+                  #Linux系统数据类型，Linux如何确定glibc版本
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/UNIX/">
+                  #UNIX
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/UNIX如何启动glibc版本/">
+                  #UNIX如何启动glibc版本
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/UNIX开发/">
+                  #UNIX开发
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/UNIX系统数据类型/">
+                  #UNIX系统数据类型
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/UNIX编程/">
+                  #UNIX编程
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="concept-of-system-programming"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/cc-fastcgi-http/">
+        <span>C/C + + 使用 FastCGI 实现 HTTP 服务</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2017-12-13
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2017-12-13
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/C-C/">
+            C/C++
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="cc-fastcgi-http"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/C-C/">
+              C/C++
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/C-使用FCGI/">
+                  #C++使用FCGI
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/C-实现Post请求/">
+                  #C++实现Post请求
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/FastCGI/">
+                  #FastCGI
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/FCGI/">
+                  #FCGI
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/GET/">
+                  #GET
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/POST/">
+                  #POST
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="cc-fastcgi-http"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/centos7-xia-mysql-an-zhuang-he-chang-jian-pei-zhi/">
+        <span>centos7 下 mysql安装和常见配置</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2017-09-23
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2017-09-23
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/MySQL/">
+            MySQL
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="centos7-xia-mysql-an-zhuang-he-chang-jian-pei-zhi"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/MySQL/">
+              MySQL
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/centos7/">
+                  #centos7
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/centos7安装MySQL/">
+                  #centos7安装MySQL
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/linux安装MySQL/">
+                  #linux安装MySQL
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/Linux维护/">
+                  #Linux维护
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/MySQL备份/">
+                  #MySQL备份
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/MySQL安装/">
+                  #MySQL安装
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/MySQL恢复备份/">
+                  #MySQL恢复备份
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/MySQL配置/">
+                  #MySQL配置
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="centos7-xia-mysql-an-zhuang-he-chang-jian-pei-zhi"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/cfeng-zhuang-inotify-shi-xian-jian-kong-wen-jian-s/">
+        <span>C++封装 inotify 实现监控文件事件</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2017-09-16
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2017-09-16
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/C-C/">
+            C/C++
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="cfeng-zhuang-inotify-shi-xian-jian-kong-wen-jian-s"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/C-C/">
+              C/C++
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/inotify/">
+                  #inotify
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/inotify教程/">
+                  #inotify教程
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/inotify无法监控文件/">
+                  #inotify无法监控文件
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="cfeng-zhuang-inotify-shi-xian-jian-kong-wen-jian-s"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/inotify-shi-yong-jiao-cheng/">
+        <span>inotify使用教程</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2017-09-09
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2017-09-09
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/C-C/">
+            C/C++
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="inotify-shi-yong-jiao-cheng"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/C-C/">
+              C/C++
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/C/">
+                  #C++
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/inotify/">
+                  #inotify
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/inotify使用教程/">
+                  #inotify使用教程
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/inotify如何监控文件/">
+                  #inotify如何监控文件
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/linux下监控文件变化/">
+                  #linux下监控文件变化
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/linux编程/">
+                  #linux编程
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="inotify-shi-yong-jiao-cheng"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/centos7-nginx-de-an-zhuang-he-pei-zhi-yi-ji-tian-k/">
+        <span>CentOS7 nginx的安装和配置以及填坑</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2017-08-26
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2017-08-26
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/Linux-维护/">
+            Linux 维护
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="centos7-nginx-de-an-zhuang-he-pei-zhi-yi-ji-tian-k"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/Linux-维护/">
+              Linux 维护
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/Linux维护/">
+                  #Linux维护
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/centos7下nginx配置/">
+                  #centos7下nginx配置
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/centos7安装nginx/">
+                  #centos7安装nginx
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/Nginx基本配置/">
+                  #Nginx基本配置
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/nginx安装/">
+                  #nginx安装
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/nginx教程/">
+                  #nginx教程
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/nginx配置FCGI/">
+                  #nginx配置FCGI
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/nginx配置HTTPS/">
+                  #nginx配置HTTPS
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="centos7-nginx-de-an-zhuang-he-pei-zhi-yi-ji-tian-k"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/shu-mei-pai-nei-wang-chuan-tou-shi-xian-yuan-cheng/">
+        <span>树莓派内网穿透，实现远程控制</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2017-08-19
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2017-08-19
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/树莓派折腾记/">
+            树莓派折腾记
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="shu-mei-pai-nei-wang-chuan-tou-shi-xian-yuan-cheng"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/树莓派折腾记/">
+              树莓派折腾记
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/FRP搭建教程/">
+                  #FRP搭建教程
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/Linux内网穿透/">
+                  #Linux内网穿透
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/Linux实现远程控制/">
+                  #Linux实现远程控制
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/Linux搭建FRP/">
+                  #Linux搭建FRP
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/树莓派内网穿透/">
+                  #树莓派内网穿透
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/树莓派实现远程控制/">
+                  #树莓派实现远程控制
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/树莓派搭建FRP/">
+                  #树莓派搭建FRP
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="shu-mei-pai-nei-wang-chuan-tou-shi-xian-yuan-cheng"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/cong-0-dao-1/">
+        <span>从 0 到 1</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2017-08-12
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2017-08-12
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/如何自学成为一名软件工程师/">
+            如何自学成为一名软件工程师
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="cong-0-dao-1"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/如何自学成为一名软件工程师/">
+              如何自学成为一名软件工程师
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/从0到1/">
+                  #从0到1
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/如何学习C/">
+                  #如何学习C++
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/如何自学成为一名软件工程师/">
+                  #如何自学成为一名软件工程师
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/编程教程/">
+                  #编程教程
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="cong-0-dao-1"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+  <div class="post">
+    <h1 class="article-title">
+      <a href="/passages/bian-cheng-zhong-yu-shu-de-yun-yong-zhi-sui-ji-fen/">
+        <span>编程中 余数 的运用之“随机分配”</span>
+      </a>
+    </h1>
+    <!-- PC端文章信息 -->
+    <div class="article-top-meta pc-view">
+      <span>
+        发布时间 : 2017-08-05
+      </span>
+    </div>
+    <!-- 移动端文章信息 -->
+    <div class="article-top-meta mobile-view">
+      <span>
+        发布 : 2017-08-05
+      </span>
+      
+        <span>
+        分类 :
+          <a href="/categories/数学/">
+            数学
+          </a>
+        </span>
+      
+      
+        <span>
+          浏览 : <span class="article-timer" data-identity="bian-cheng-zhong-yu-shu-de-yun-yong-zhi-sui-ji-fen"></span>
+        </span>
+      
+    </div>
+    
+    <!-- 文章简介 -->
+    <div class="article-content">
+      <div class="markdown-body article-content--inner" v-html="mdToHtml(psg.summary)">
+        
+      </div>
+    </div>
+    <div class="article-footer">
+      <div class="article-meta pull-left">
+        <!-- 分类pc端可见 -->
+        <span class="pc-view">
+          
+            <i class="iconfont icon-tag"></i>分类:
+            <a href="/categories/数学/">
+              数学
+            </a>
+          </span>
+          
+        <span>
+          
+            <i class="iconfont icon-06tags"></i>标签:
+            
+              <span class="span--tag">
+                <a href="/tags/程序员的数学/">
+                  #程序员的数学
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/C-编程/">
+                  #C++编程
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/数学/">
+                  #数学
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/编程中-余数-的运用之“随机分配”/">
+                  #编程中 **余数** 的运用之“随机分配”
+                </a>
+              </span>
+            
+              <span class="span--tag">
+                <a href="/tags/随机分配/">
+                  #随机分配
+                </a>
+              </span>
+            
+                    
+        </span>
+      </div>
+      
+        <div class="article-meta pull-right">
+          <span class="pc-view">
+            <i class="iconfont icon-view"></i>浏览: <span class="article-timer" data-identity="bian-cheng-zhong-yu-shu-de-yun-yong-zhi-sui-ji-fen"></span>
+          </span>
+        </div>
+      
+    </div>
+  </div>
+  
+
+  <nav class="page-navigation">
+    
+      <a href="/page/2/">上一页</a>
+    
+    
+      <a href="/page/4/">下一页</a>
+    
+  </nav>
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz", "1m0ym3IWOSrAx7sea858S9ES");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = false;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2017, 0, 16).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>

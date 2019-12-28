@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
+  
+  
+  
+  <title>C++ 封装 Zookeeper C API | 舍予书</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Zookeeper,C++ 封装 Zookeeper C API,Zookeeper,zookeeper C++ API,zookeeper c++ 调用方法,zookeeper c++接口,zookeeper cpp,zookeeper cppp,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+    <meta name="description" content="舍予书-是我在工作和生活中的一些心得和经验，在这里分享给大家，期望能够对你有所帮助">
+  
+
+  
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">舍予书</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              主页
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              归档
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>抓到我</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/LojzeLiu" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.zhihu.com/people/LojzeLiu/activities" 
+                    target="_blank"
+                  >
+                    知乎
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>C++ 封装 Zookeeper C API</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      发布 : 
+      2017-07-01
+    </span>
+    
+      <span>
+        分类 : 
+          <a href="/categories/Zookeeper/">
+            Zookeeper
+          </a>
+      </span>
+    
+    
+      <span>
+        浏览 : <span class="article-timer" data-identity="c-feng-zhuang-zookeeper-c-api-trashed-2"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <blockquote>
+<p>本文主要将使用 C++ 封装 Zookeeper C API，实现创建、删除节点和监控节点和子节点。本文并不讲解 Zookeeper C API 的接口，如您对 Zookeeper C API 还不熟悉，建议到<a href="http://www.cnblogs.com/haippy/archive/2013/02/21/2920280.html" target="_blank" rel="noopener">Zookeeper C API 指南</a>学习相关接口的调用。</p>
+</blockquote>
+<h3 id="关于-Zookeeper"><a href="#关于-Zookeeper" class="headerlink" title="关于 Zookeeper"></a>关于 Zookeeper</h3><p>　　Apache ZooKeeper是Apache软件基金会的一个软件项目，他为大型分布式计算提供开源的分布式配置服务、同步服务和命名注册。 ZooKeeper曾经是Hadoop的一个子项目，但现在是一个独立的顶级项目。<br>ZooKeeper的架构通过冗余服务实现高可用性。因此，如果第一次无应答，客户端就可以询问另一台ZooKeeper主机。ZooKeeper节点将它们的数据存储于一个分层的命名空间，非常类似于一个文件系统或一个前缀树结构。客户端可以在节点读写，从而以这种方式拥有一个共享的配置服务。更新是全序的。<a href="https://zh.wikipedia.org/wiki/Apache_ZooKeeper" target="_blank" rel="noopener">摘自维基百科</a></p>
+<h3 id="实现背景"><a href="#实现背景" class="headerlink" title="实现背景"></a>实现背景</h3><p>　　　近期正在完成一个需求，需要监控多台服务器上的程序运行情况。于是便用到了 Zookeeper。了解了下相关的 API，便写了自己封装了一个类，以方便日后的使用。  
+　　　</p>
+<h3 id="实现情况"><a href="#实现情况" class="headerlink" title="实现情况"></a>实现情况</h3><p>　　目前实现了节点和子节点的创建于监控，由于只是第一版肯定会有很多的不足之处。还请大家多多指教。</p>
+<h3 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h3><h4 id="Zookeeper-h"><a href="#Zookeeper-h" class="headerlink" title="Zookeeper.h"></a>Zookeeper.h</h4><p><a href="https://coding.net/u/LojzeLiu/p/Common/git/blob/master/Zookeeper.h" target="_blank" rel="noopener">下载最新代码</a></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Describe: 对 Zookeeper 的封装，实现创建节点和节点监听功能</span></span><br><span class="line"><span class="comment"> * Author：LiuYang</span></span><br><span class="line"><span class="comment"> * Date: 2017-06-29</span></span><br><span class="line"><span class="comment"> * Other: 关于 Zookeeper C API 相关资料请参考：http://www.cnblogs.com/haippy/archive/2013/02/21/2920280.html</span></span><br><span class="line"><span class="comment"> * */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __ZOOKEEPER_H__</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __ZOOKEEPER_H__</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"CDebugTrace.h"</span></span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">ACL_vector</span> <span class="title">ACLVector</span>;</span></span><br><span class="line"><span class="comment">//st_mSessionState = ZOO_SESSION_STATE;</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Zookeeper</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Zookeeper(<span class="keyword">void</span>);</span><br><span class="line">    ~Zookeeper(<span class="keyword">void</span>);</span><br><span class="line">    <span class="comment">//初始化</span></span><br><span class="line">    <span class="comment">//参数：host：zookeeper服务器地址和ip "ip:port,ip:port"</span></span><br><span class="line">    <span class="comment">//返回：0 成功</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">Init</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *host, <span class="keyword">void</span> *context = <span class="literal">NULL</span>)</span></span>;</span><br><span class="line">    <span class="comment">//说明：监控字节点状态</span></span><br><span class="line">    <span class="comment">//参数：</span></span><br><span class="line">    <span class="comment">//  path:       节点路径</span></span><br><span class="line">    <span class="comment">//  watcher:    如果非 NULL, 则在服务器端设置监视，当监视节点发生变化或被创建时调用该函数</span></span><br><span class="line">    <span class="comment">//  watcherCtx: 用户指定数据，将被传入到回调函数中</span></span><br><span class="line">    <span class="comment">//  completion: 当请求完成时，会调用该函数,同时传给 completion 的参数为：</span></span><br><span class="line">    <span class="comment">//              ZOK 操作完成;</span></span><br><span class="line">    <span class="comment">//              ZNONODE 节点不存在;</span></span><br><span class="line">    <span class="comment">//              ZHOAUTH 客户端没有权限操作该节点;</span></span><br><span class="line">    <span class="comment">//  data:       completion 函数被调用时，传递给的数据。</span></span><br><span class="line">    <span class="comment">//返回：结果代码</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">GetChildrenZoo</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, watcher_fn watcher, <span class="keyword">void</span> *watcherCtx, <span class="keyword">strings_completion_t</span> completion, <span class="keyword">const</span> <span class="keyword">void</span> *data)</span></span>;</span><br><span class="line">    <span class="comment">//说明：监听节点状态</span></span><br><span class="line">    <span class="comment">//参数： </span></span><br><span class="line">    <span class="comment">//  path:       节点路径</span></span><br><span class="line">    <span class="comment">//  watcher:    如果非 NULL, 则在服务器端设置监视，当监视节点发生变化或被创建时调用该函数</span></span><br><span class="line">    <span class="comment">//  watcherCtx: 用户指定数据，将被传入到回调函数中</span></span><br><span class="line">    <span class="comment">//  completion: 当请求完成时，会调用该函数,同时传给 completion 的参数为：</span></span><br><span class="line">    <span class="comment">//              ZOK 操作完成;</span></span><br><span class="line">    <span class="comment">//              ZNONODE 节点不存在;</span></span><br><span class="line">    <span class="comment">//              ZHOAUTH 客户端没有权限操作该节点;</span></span><br><span class="line">    <span class="comment">//  data:       completion 函数被调用时，传递给的数据。</span></span><br><span class="line">    <span class="comment">//返回：结果代码</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">AwexistsZoo</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, watcher_fn watcher, <span class="keyword">void</span> *watcherCtx, <span class="keyword">stat_completion_t</span> completion, <span class="keyword">const</span> <span class="keyword">void</span> *data)</span></span>;</span><br><span class="line">    <span class="comment">//说明：创建 znode 节点</span></span><br><span class="line">    <span class="comment">//参数：</span></span><br><span class="line">    <span class="comment">//  path:       节点路径</span></span><br><span class="line">    <span class="comment">//  value:      该节点保存的数据</span></span><br><span class="line">    <span class="comment">//  len:        所保存数据的长度</span></span><br><span class="line">    <span class="comment">//  acl:        该节点初始 ACL，不能为 NULL 或空</span></span><br><span class="line">    <span class="comment">//  completion: 当请求完成时，会调用该函数,同时传给 completion 的参数为：</span></span><br><span class="line">    <span class="comment">//              ZOK 操作完成;</span></span><br><span class="line">    <span class="comment">//              ZNONODE 父节点不存在</span></span><br><span class="line">    <span class="comment">//              ZNODEEXISTS 节点以存在</span></span><br><span class="line">    <span class="comment">//              ZNOAUTH 没有权限</span></span><br><span class="line">    <span class="comment">//              ZNOCHILDRENFOREPHEMERALS 临时节点不能创建子节点</span></span><br><span class="line">    <span class="comment">//  data:       completion 函数被调用时，传递给的数据。</span></span><br><span class="line">    <span class="comment">//  flags:      默认为0， 可以为: ZOO_EPHEMERAL, ZOO_SEQUENCE 的组合或(OR)</span></span><br><span class="line">    <span class="comment">//返回：结果代码</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">CreateZoo</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">const</span> <span class="keyword">char</span> *value, <span class="keyword">int</span> len, <span class="keyword">const</span> ACL_vector *acl,</span></span></span><br><span class="line"><span class="function"><span class="params">                                <span class="keyword">string_completion_t</span> completion, <span class="keyword">const</span> <span class="keyword">void</span> *data, <span class="keyword">int</span> flags = <span class="number">0</span>)</span></span>;</span><br><span class="line">    <span class="comment">//说明：删除 zonde 节点</span></span><br><span class="line">    <span class="comment">//参数：</span></span><br><span class="line">    <span class="comment">//  path:     节点路径</span></span><br><span class="line">    <span class="comment">//  completion: 当请求完成时，会调用该函数,同时传给 completion 的参数为：</span></span><br><span class="line">    <span class="comment">//          ZOK 操作完成；</span></span><br><span class="line">    <span class="comment">//          ZNONODE 节点不存在；</span></span><br><span class="line">    <span class="comment">//          ZNOAUTH 客户端没有权限删除节点；</span></span><br><span class="line">    <span class="comment">//          ZBADVERSION 版包号不匹配；</span></span><br><span class="line">    <span class="comment">//          ZNOTEMPTY 当前节点存在子节点，不能被删除。</span></span><br><span class="line">    <span class="comment">//  data:       completion 函数被调用时，传递给的数据。</span></span><br><span class="line">    <span class="comment">//  version:  期望删除的版本号，如果真实的版本好不同则删除识别， 默认为-1 标识不检查版本号</span></span><br><span class="line">    <span class="comment">//返回：结果代码</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">DeleteZoo</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">void_completion_t</span> completion, <span class="keyword">const</span> <span class="keyword">void</span> *data, <span class="keyword">int</span> version = <span class="number">-1</span>)</span></span>;</span><br><span class="line">    <span class="comment">//说明：获取所有子节点路径 对 zoo_get_children的封装</span></span><br><span class="line">    <span class="comment">//参数：</span></span><br><span class="line">    <span class="comment">//  path： 父节点路径</span></span><br><span class="line">    <span class="comment">//  children_path: 返回参数，返回子节点路径和子节点数量</span></span><br><span class="line">    <span class="comment">//          children_path.count: 子节点数量，children_data[N]：子节点名称</span></span><br><span class="line">    <span class="comment">//  zh：zookeeper 句柄，默认为NULL，当为NULL 时使用 zookeeper_init() 返回的 句柄。</span></span><br><span class="line">    <span class="comment">//返回：结果代码</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">GetChildrenPathZoo</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, struct String_vector *children_path, <span class="keyword">zhandle_t</span> *zh = <span class="literal">NULL</span>)</span></span>;</span><br><span class="line">    <span class="comment">//说明：获取指定节点的数据，对zoo_get的封装</span></span><br><span class="line">    <span class="comment">//参数：</span></span><br><span class="line">    <span class="comment">//  path： 父节点路径</span></span><br><span class="line">    <span class="comment">//  buf:   返回参数，返回节点数据</span></span><br><span class="line">    <span class="comment">//  len：  返回参数，返回数据长度</span></span><br><span class="line">    <span class="comment">//  stat：返回参数，节点状态</span></span><br><span class="line">    <span class="comment">//  zh：zookeeper 句柄，默认为NULL，当为NULL 时使用 zookeeper_init() 返回的 句柄。</span></span><br><span class="line">    <span class="comment">//返回：结果代码</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">GetZoo</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">char</span> *buf, <span class="keyword">int</span> *len, struct Stat *stat, <span class="keyword">zhandle_t</span> *zh = <span class="literal">NULL</span>)</span></span>;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 函数说明：设置节点数据</span></span><br><span class="line"><span class="comment">     * 参数：</span></span><br><span class="line"><span class="comment">     *  lpPath:    设置节点路径</span></span><br><span class="line"><span class="comment">     *  lpBuf:     设置数据</span></span><br><span class="line"><span class="comment">     *  liBuflen:  数据长度</span></span><br><span class="line"><span class="comment">     *  liVersion: 版本</span></span><br><span class="line"><span class="comment">     * 返回：结果代码</span></span><br><span class="line"><span class="comment">     * */</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">SetZoo</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *lpPath, <span class="keyword">const</span> <span class="keyword">char</span> *lpBuf, <span class="keyword">int</span> liBuflen, <span class="keyword">int</span> liVersion)</span></span>;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 函数说明：检查路径是否存</span></span><br><span class="line"><span class="comment">     * 参数：</span></span><br><span class="line"><span class="comment">     *  lpPath: 检查路径</span></span><br><span class="line"><span class="comment">     * 返回：true: 存在, false: 不存在</span></span><br><span class="line"><span class="comment">     * */</span></span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">IsExist</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *lpPath)</span></span>;</span><br><span class="line">    <span class="comment">//说明：获取错误原因</span></span><br><span class="line">    <span class="comment">//参数： err_num zookeeper c aip 返回的错误码</span></span><br><span class="line">    <span class="comment">//返回：返回 zookeeper c aip 定义的错误宏</span></span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">std</span>::<span class="function"><span class="built_in">string</span> <span class="title">GetErrorMsg</span><span class="params">(<span class="keyword">int</span> err_num)</span></span>;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 函数说明：检查连接状态</span></span><br><span class="line"><span class="comment">     * 返回：0: 连接正常</span></span><br><span class="line"><span class="comment">     * */</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">CheckConnectState</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="comment">//销毁资源</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">Destry</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line">    <span class="comment">//初始化错误代码</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">setErrorCode</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line">    <span class="comment">//打印状态</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">PrintStat</span><span class="params">(struct Stat *stat)</span></span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="comment">//全局的监控器回调函数</span></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">session_watcher</span><span class="params">(<span class="keyword">zhandle_t</span> *zh, <span class="keyword">int</span> type, <span class="keyword">int</span> state, <span class="keyword">const</span> <span class="keyword">char</span>* path, <span class="keyword">void</span> *watcherCtx)</span></span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">zhandle_t</span>                    *m_pZkHandle;             <span class="comment">//Zookeeper 句柄</span></span><br><span class="line">    <span class="keyword">int</span>                           m_timeout;               <span class="comment">//超时</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">std</span>::<span class="built_in">map</span>    m_errorMsg;       <span class="comment">//错误信息</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span>                           st_mSessionState; <span class="comment">//会话状态</span></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span>                          mstrHost;         <span class="comment">//zookeeper 地址</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">//__ZOOKEEPER_H__</span></span></span><br></pre></td></tr></table></figure>
+<h4 id="Zookeeper-cpp"><a href="#Zookeeper-cpp" class="headerlink" title="Zookeeper.cpp"></a>Zookeeper.cpp</h4><p><a href="https://coding.net/u/LojzeLiu/p/Common/git/blob/master/Zookeeper.h" target="_blank" rel="noopener">下载最新代码</a></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Describe: 对 Zookeeper 的封装，实现创建节点和节点监听功能</span></span><br><span class="line"><span class="comment"> * Author：LiuYang</span></span><br><span class="line"><span class="comment"> * Date: 2017-06-29</span></span><br><span class="line"><span class="comment"> * */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"Zookeeper.h"</span></span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::st_mSessionState = ZOO_CONNECTED_STATE;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">map</span>    Zookeeper::m_errorMsg;</span><br><span class="line">Zookeeper::Zookeeper(<span class="keyword">void</span>):m_pZkHandle(<span class="literal">NULL</span>),m_timeout(<span class="number">30000</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//初始话错误代码</span></span><br><span class="line">    setErrorCode();</span><br><span class="line">&#125;</span><br><span class="line">Zookeeper::~Zookeeper(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">    TRACE(DEBUG_LEV, <span class="string">"This is destructor Zookeeper"</span>);</span><br><span class="line">    Destry();  <span class="comment">//销毁资源</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//初始化</span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::Init(<span class="keyword">const</span> <span class="keyword">char</span> *host, <span class="keyword">void</span> *context <span class="comment">/*= NULL*/</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(m_pZkHandle != <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//销毁之前初始化的资源</span></span><br><span class="line">        TRACE(DEBUG_LEV, <span class="string">"This is Init Zookeeper"</span>);</span><br><span class="line">        Destry();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//初始化 zookeeper 句柄</span></span><br><span class="line">    m_pZkHandle = zookeeper_init(host, session_watcher, m_timeout, <span class="literal">NULL</span>, context, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(m_pZkHandle == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV, <span class="string">"Error when connection to zookeeper server."</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//记录主机地址</span></span><br><span class="line">    mstrHost = host;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//说明：监听节点状态</span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::GetChildrenZoo(<span class="keyword">const</span> <span class="keyword">char</span> *path, watcher_fn watcher, <span class="keyword">void</span> *watcherCtx, <span class="keyword">strings_completion_t</span> completion, <span class="keyword">const</span> <span class="keyword">void</span> *data)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(m_pZkHandle == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV,<span class="string">"Error zkHandle is NULL."</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> ret = zoo_awget_children(m_pZkHandle, path, watcher, watcherCtx, completion, data);</span><br><span class="line">    <span class="keyword">if</span>(ret)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV, <span class="string">"Error when get children to zookeeper node. what: "</span> &lt;&lt; Zookeeper::GetErrorMsg(ret));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//说明：监听节点状态</span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::AwexistsZoo(<span class="keyword">const</span> <span class="keyword">char</span> *path, watcher_fn watcher, <span class="keyword">void</span> *watcherCtx, <span class="keyword">stat_completion_t</span> completion, <span class="keyword">const</span> <span class="keyword">void</span> *data)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(m_pZkHandle == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV,<span class="string">"Error zkHandle is NULL."</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> ret = zoo_awexists(m_pZkHandle, path, watcher, watcherCtx, completion, data);</span><br><span class="line">    <span class="keyword">if</span>(ret)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV, <span class="string">"Error when exists to zookeeper node. what: "</span> &lt;&lt; Zookeeper::GetErrorMsg(ret));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//说明：创建 znode 节点</span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::CreateZoo(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">const</span> <span class="keyword">char</span> *value, <span class="keyword">int</span> len, <span class="keyword">const</span> ACLVector *acl,</span><br><span class="line">                            <span class="keyword">string_completion_t</span> completion, <span class="keyword">const</span> <span class="keyword">void</span> *data, <span class="keyword">int</span> flags<span class="comment">/*= 0*/</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(m_pZkHandle == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV,<span class="string">"Error zkHandle is NULL."</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> ret = zoo_acreate(m_pZkHandle, path, value, len, acl, flags, completion, data);</span><br><span class="line">    <span class="keyword">if</span>(ret)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV, <span class="string">"Error when create to zookeeper node.what: "</span> &lt;&lt; Zookeeper::GetErrorMsg(ret));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//说明：删除 zonde 节点</span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::DeleteZoo(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">void_completion_t</span> completion, <span class="keyword">const</span> <span class="keyword">void</span> *data, <span class="keyword">int</span> version <span class="comment">/*= -1*/</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(m_pZkHandle == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV,<span class="string">"Error zkHandle is NULL."</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> ret = zoo_adelete(m_pZkHandle, path, version, completion, data);</span><br><span class="line">    <span class="keyword">if</span>(ret)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV, <span class="string">"Error when delete to zookeeper node. what: "</span> &lt;&lt; Zookeeper::GetErrorMsg(ret));</span><br><span class="line">    &#125;</span><br><span class="line">    TRACE(DEBUG_LEV, <span class="string">"Zookeeper deleteZoo succesed."</span>);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//说明：获取所有子节点路径 对 zoo_get_children的封装</span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::GetChildrenPathZoo(<span class="keyword">const</span> <span class="keyword">char</span> *path, struct String_vector *children_path, <span class="keyword">zhandle_t</span> *zh <span class="comment">/*= NULL*/</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span>(zh == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        ret = zoo_get_children(m_pZkHandle, path, <span class="number">1</span>, children_path);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        ret = zoo_get_children(zh, path, <span class="number">1</span>, children_path);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//说明：获取指定节点的数据，对zoo_get的封装</span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::GetZoo(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">char</span> *buf, <span class="keyword">int</span> *len, struct Stat *stat, <span class="keyword">zhandle_t</span> *zh <span class="comment">/*= NULL*/</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span>(zh == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        ret = zoo_get(m_pZkHandle, path, <span class="number">0</span>, buf, len, stat);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        ret = zoo_get(zh, path, <span class="number">0</span>, buf, len, stat);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(ret &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV, <span class="string">"zoo_get failed. reason: "</span> &lt;&lt; Zookeeper::GetErrorMsg(ret) &lt;&lt; <span class="string">"; ret: "</span> &lt;&lt; ret);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> Zookeeper::SetZoo(<span class="keyword">const</span> <span class="keyword">char</span> *lpPath, <span class="keyword">const</span> <span class="keyword">char</span> *lpBuf, <span class="keyword">int</span> liBuflen, <span class="keyword">int</span> liVersion)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> liRet = zoo_set(m_pZkHandle, lpPath, lpBuf, liBuflen, liVersion);</span><br><span class="line">    <span class="keyword">if</span>(liRet &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(DEBUG_LEV, <span class="string">"SetZoo failed. reason: "</span> &lt;&lt; Zookeeper::GetErrorMsg(liRet) &lt;&lt; <span class="string">"; liRet: "</span> &lt;&lt; liRet);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> liRet;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">bool</span> Zookeeper::IsExist(<span class="keyword">const</span> <span class="keyword">char</span> *lpPath)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">Stat</span> <span class="title">lStat</span>;</span></span><br><span class="line">    <span class="keyword">int</span> ret = zoo_exists(m_pZkHandle, lpPath, <span class="number">0</span>, &amp;lStat);</span><br><span class="line">    <span class="keyword">if</span>( ret == <span class="number">-101</span> )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(ret &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV, <span class="string">"Error, reason: "</span> &lt;&lt; Zookeeper::GetErrorMsg(ret));</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//说明：获取错误原因</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> Zookeeper::GetErrorMsg(<span class="keyword">int</span> err_num)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> zerror(err_num);</span><br><span class="line">    <span class="comment">//return Zookeeper::m_errorMsg[err_num];</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> Zookeeper::CheckConnectState(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//检查连接状态</span></span><br><span class="line">    <span class="keyword">int</span> liRet = is_unrecoverable(m_pZkHandle);</span><br><span class="line">    <span class="keyword">if</span>(liRet == ZINVALIDSTATE)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//连接断开,重新连接</span></span><br><span class="line">        TRACE(DEBUG_LEV, <span class="string">"The zookeeper is unrecoverable. ret: "</span> &lt;&lt; liRet);</span><br><span class="line">        Init(mstrHost.c_str());</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//TRACE(DEBUG_LEV, "The zookeeper is recoverable. ret: " &lt;&lt; liRet);</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//销毁资源</span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::Destry(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(m_pZkHandle == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV,<span class="string">"Error zkHandle is NULL."</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> ret = zookeeper_close(m_pZkHandle);</span><br><span class="line">    <span class="keyword">if</span>(ret)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(ERROR_LEV, <span class="string">"Error when close to zookeeper handle. what: "</span> &lt;&lt; Zookeeper::GetErrorMsg(ret));</span><br><span class="line">    &#125;</span><br><span class="line">    m_pZkHandle = <span class="literal">NULL</span>;</span><br><span class="line">    TRACE(DEBUG_LEV, <span class="string">"zookeeper Destry."</span>);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//初始化错误代码</span></span><br><span class="line"><span class="keyword">int</span> Zookeeper::setErrorCode(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">    Zookeeper::m_errorMsg[ZOK]                      = <span class="string">"ZOK"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZSYSTEMERROR]             = <span class="string">"ZSYSTEMERROR"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZRUNTIMEINCONSISTENCY]    = <span class="string">"ZRUNTIMEINCONSISTENCY"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZDATAINCONSISTENCY]       = <span class="string">"ZDATAINCONSISTENCY"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZCONNECTIONLOSS]          = <span class="string">"ZCONNECTIONLOSS"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZMARSHALLINGERROR]        = <span class="string">"ZMARSHALLINGERROR"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZUNIMPLEMENTED]           = <span class="string">"ZUNIMPLEMENTED"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZOPERATIONTIMEOUT]        = <span class="string">"ZOPERATIONTIMEOUT"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZBADARGUMENTS]            = <span class="string">"ZBADARGUMENTS"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZINVALIDSTATE]            = <span class="string">"ZINVALIDSTATE"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZAPIERROR]                = <span class="string">"ZAPIERROR"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZNONODE]                  = <span class="string">"ZNONODE"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZNOAUTH]                  = <span class="string">"ZNOAUTH"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZBADVERSION]              = <span class="string">"ZBADVERSION"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZNOCHILDRENFOREPHEMERALS] = <span class="string">"ZNODEEXISTS"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZNOTEMPTY]                = <span class="string">"ZNOTEMPTY"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZSESSIONEXPIRED]          = <span class="string">"ZSESSIONEXPIRED"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZINVALIDCALLBACK]         = <span class="string">"ZINVALIDCALLBACK"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZINVALIDACL]              = <span class="string">"ZINVALIDACL"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZAUTHFAILED]              = <span class="string">"ZAUTHFAILED"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZCLOSING]                 = <span class="string">"ZCLOSING"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZNOTHING]                 = <span class="string">"ZNOTHING"</span>;</span><br><span class="line">    Zookeeper::m_errorMsg[ZSESSIONMOVED]            = <span class="string">"ZSESSIONMOVED"</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//打印状态</span></span><br><span class="line"><span class="keyword">void</span> Zookeeper::PrintStat(struct Stat *stat)</span><br><span class="line">&#123;</span><br><span class="line">    TRACE(DEBUG_LEV, <span class="string">"czxid: "</span>              &lt;&lt; stat-&gt;czxid</span><br><span class="line">            &lt;&lt; <span class="string">"; mzxid: "</span>          &lt;&lt; stat-&gt;mzxid</span><br><span class="line">            &lt;&lt; <span class="string">"; ctime: "</span>          &lt;&lt; stat-&gt;ctime</span><br><span class="line">            &lt;&lt; <span class="string">"; mtime: "</span>          &lt;&lt; stat-&gt;mtime</span><br><span class="line">            &lt;&lt; <span class="string">"; version: "</span>        &lt;&lt; stat-&gt;version</span><br><span class="line">            &lt;&lt; <span class="string">"; cversion: "</span>       &lt;&lt; stat-&gt;cversion</span><br><span class="line">            &lt;&lt; <span class="string">"; aversion: "</span>       &lt;&lt; stat-&gt;aversion</span><br><span class="line">            &lt;&lt; <span class="string">"; ephemeralOwner: "</span> &lt;&lt; stat-&gt;ephemeralOwner</span><br><span class="line">            &lt;&lt; <span class="string">"; dataLength: "</span>     &lt;&lt; stat-&gt;dataLength</span><br><span class="line">            &lt;&lt; <span class="string">"; numChildren: "</span>    &lt;&lt; stat-&gt;numChildren</span><br><span class="line">            &lt;&lt; <span class="string">"; pzxid: "</span>          &lt;&lt; stat-&gt;pzxid</span><br><span class="line">            );</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//全局的监控器回调函数</span></span><br><span class="line"><span class="keyword">void</span> Zookeeper::session_watcher(<span class="keyword">zhandle_t</span> *zh, <span class="keyword">int</span> type, <span class="keyword">int</span> state, <span class="keyword">const</span> <span class="keyword">char</span>* path, <span class="keyword">void</span> *watcherCtx)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>( type == ZOO_SESSION_EVENT )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>( state == ZOO_EXPIRED_SESSION_STATE)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//会话结</span></span><br><span class="line">            TRACE(DEBUG_LEV, <span class="string">"zookeeper session expred."</span>);</span><br><span class="line">            st_mSessionState = ZOO_EXPIRED_SESSION_STATE;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h3><blockquote>
+<p>下面是对象的简单调用方法。</p>
+</blockquote>
+<p><strong>监控端应用</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"Zookeeper.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"><span class="keyword">bool</span> poolf = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//信号处理函数</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sighandl</span><span class="params">(<span class="keyword">int</span> sig_num)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    poolf = <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//节点变化回调函数</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">watch_children</span><span class="params">(<span class="keyword">zhandle_t</span> *zh, <span class="keyword">int</span> type, <span class="keyword">int</span> state, <span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">void</span> *watcherCtx)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//监听节点函数结束回调函数</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">stat_childrensts_com</span><span class="params">(<span class="keyword">int</span> rc, <span class="keyword">const</span> struct String_vector *strings, <span class="keyword">const</span> <span class="keyword">void</span> *data)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    signal(SIGTERM, sighandl);</span><br><span class="line">    <span class="comment">//初始化</span></span><br><span class="line">    Zookeeper      zoo_watch;</span><br><span class="line">    zoo_watch.Init(<span class="string">"127.0.0.1:8819,127.0.0.1:8820"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//监控指定路径下的子节点变化</span></span><br><span class="line">    zoo_watch.GetChildrenZoo(<span class="string">"/zooned"</span>, watch_children, (<span class="keyword">void</span>*)&amp;zoo_watch, stat_childrensts_com, <span class="string">"/zooned"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//主进程进行等待</span></span><br><span class="line">    <span class="keyword">while</span>(poolf)</span><br><span class="line">    &#123;</span><br><span class="line">        sleep(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">watch_children</span><span class="params">(<span class="keyword">zhandle_t</span> *zh, <span class="keyword">int</span> type, <span class="keyword">int</span> state, <span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">void</span> *watcherCtx)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> path_buf[<span class="number">50</span>] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    Zookeeper  *p_zooWatch = (Zookeeper*)watcherCtx;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">String_vector</span> <span class="title">children_path</span>;</span></span><br><span class="line">    <span class="keyword">if</span>(state == ZOO_CONNECTED_STATE)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//判断事件类型</span></span><br><span class="line">        <span class="keyword">if</span>(type == ZOO_CHILD_EVENT)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//子节点事件</span></span><br><span class="line">            zoo_get_children(zh, path, <span class="number">1</span>, &amp;children_path); <span class="comment">//获取所有子节点</span></span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; children_path.count; i++) <span class="comment">//遍历子节点路径</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="built_in">sprintf</span>(path_buf, <span class="string">"%s/%s"</span>, path, children_path.data[i]); <span class="comment">//生成完整的节点路径</span></span><br><span class="line">                zoo_get(zh, path_buf, <span class="number">0</span>, buf, &amp;len, &amp;p_stat); <span class="comment">//获取子节点的数据</span></span><br><span class="line">                <span class="built_in">cout</span> &lt;&lt; <span class="string">"child node path: "</span> &lt;&lt; path &lt;&lt; <span class="string">" data: "</span> &lt;&lt; buf &lt;&lt; <span class="built_in">endl</span>; <span class="comment">//打印子节点数据</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//重新监控子节点</span></span><br><span class="line">    p_zooWatch-&gt;RewatchChildZoo();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">stat_childrensts_com</span><span class="params">(<span class="keyword">int</span> rc, <span class="keyword">const</span> struct String_vector *strings, <span class="keyword">const</span> <span class="keyword">void</span> *data)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    TRACE(LOG_DEBUG, <span class="string">"rc: "</span> &lt;&lt; rc &lt;&lt; <span class="string">" "</span> &lt;&lt; Zookeeper::GetErrorMsg(rc) &lt;&lt; <span class="string">" data: "</span> &lt;&lt; (data == <span class="literal">NULL</span> ? <span class="string">"NULL"</span> : (<span class="keyword">char</span>*)data));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="代码解释"><a href="#代码解释" class="headerlink" title="代码解释"></a>代码解释</h3><p>　　首先是关于 <strong>TRACE(LOG_DEBUG, )</strong> 这个是日志的使用方法，如果你想直接使用我封装的对象，建议你到<a href="https://coding.net/u/LojzeLiu/p/Common/git/blob/master/Zookeeper.h" target="_blank" rel="noopener">这里下载代码</a>将整个Common库添加到你的工程。或者你也可以将TRACE 替换成你日志记录的方法。</p>
+<h4 id="监控方法解释"><a href="#监控方法解释" class="headerlink" title="监控方法解释"></a>监控方法解释</h4><p><strong>main函数</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化</span></span><br><span class="line">Zookeeper      zoo_watch;</span><br><span class="line">zoo_watch.Init(<span class="string">"127.0.0.1:8819,127.0.0.1:8820"</span>);</span><br></pre></td></tr></table></figure>
+<p>　　这里是初始化对象，Init有两个参数，host是 zookeeper服务器的地址和端口 “ip:port,ip:port”，当链接 zookeeper 机器是需要输入多台服务器的地址，每个地址使用 “,” 分开。  
+　　</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//监控指定路径下的子节点变化</span></span><br><span class="line">zoo_watch.GetChildrenZoo(<span class="string">"/zooned"</span>, watch_children, (<span class="keyword">void</span>*)&amp;zoo_watch, stat_childrensts_com, <span class="string">"/zooned"</span>);</span><br></pre></td></tr></table></figure>
+<p>　　这里是监控 /zooned 节点下的子节点变化，当该节点下发生增加或删除节点时会调用 watch_children 函数。这里要说的是第三个实参，该参数是将 Zookeeper对象指针传递给 watch_children 函数。至于作用会在后面描述。  
+　　</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//主进程进行等待</span></span><br><span class="line"><span class="keyword">while</span>(poolf) &#123;</span><br><span class="line">    sleep(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>　　这里让主进程进行死循环等待，当接受到 killall 命令下的信号时，会退出循环。这样做的原因是在项目开发中我发现了如果使用 killall 命令结束进程时，对象的析构函数并不会执行，所以做了这样的操作。<br>　　<br><strong>watch_children 函数</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Zookeeper  *p_zooWatch = (Zookeeper*)watcherCtx;</span><br></pre></td></tr></table></figure>
+<p>　　这里是将上面传进来的 void<em> 强转成 Zookeepr</em> 类型。以便后面调用重新监控的方法。  
+　　</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(state == ZOO_CONNECTED_STATE)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//判断事件类型</span></span><br><span class="line">        <span class="keyword">if</span>(type == ZOO_CHILD_EVENT)</span><br></pre></td></tr></table></figure>
+<p>　　第一个 if 是判断于zookeeper 服务器的链接状态，第二个是判断事件类型是否为 子节点事件。  
+　　</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zoo_get_children(zh, path, <span class="number">1</span>, &amp;children_path); <span class="comment">//获取所有子节点</span></span><br></pre></td></tr></table></figure>
+<p>　　这里是获取所有子节点的路径。<br>　　<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; children_path.count; i++) <span class="comment">//遍历子节点路径</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">sprintf</span>(path_buf, <span class="string">"%s/%s"</span>, path, children_path.data[i]); <span class="comment">//生成完整的节点路径</span></span><br><span class="line">            zoo_get(zh, path_buf, <span class="number">0</span>, buf, &amp;len, &amp;p_stat); <span class="comment">//获取子节点的数据</span></span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"child node path: "</span> &lt;&lt; path &lt;&lt; <span class="string">" data: "</span> &lt;&lt; buf &lt;&lt; <span class="built_in">endl</span>; <span class="comment">//打印子节点数据</span></span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　这里是对 zoo_get_children 函数返回的子节点进行遍历，zoo_get 函数是获取指定路径的数据。注意，这里的路径一定要是完成的路径。  
+　　</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//重新监控子节点</span></span><br><span class="line">p_zooWatch-&gt;RewatchChildZoo();</span><br></pre></td></tr></table></figure>
+<p>　　这里是重新监控节点。注意，每次事件发生后一定要重新监控，否则之后的事件都无法监听到。  
+　　</p>
+<h4 id="创建节点方法解释"><a href="#创建节点方法解释" class="headerlink" title="创建节点方法解释"></a>创建节点方法解释</h4><p>　<strong>main 函数</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建子节点</span></span><br><span class="line">zoo_watch.CreateZoo(<span class="string">"/zoonode/childnode01"</span>, <span class="string">"childnode01 data"</span>, &amp;ZOO_OPEN_ACL_UNSAFE, CreateZoo_string_com, <span class="string">"CreateZoo"</span>, ZOO_EPHEMERAL);</span><br></pre></td></tr></table></figure>
+<p>　　这里是创建一个 childnode01 的节点。该函数会触发子节点事件。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zoo_watch.DeleteZoo(<span class="string">"/zoonode/childnode01"</span>, Delete_void_com, <span class="string">"delete"</span>, <span class="number">-1</span>); <span class="comment">//删除子节点</span></span><br></pre></td></tr></table></figure>
+<p>　　这里是删除 childnode01 节点， 该函数会触发子节点事件。  
+　　</p>
+<h4 id="关于监控指定节点"><a href="#关于监控指定节点" class="headerlink" title="关于监控指定节点"></a>关于监控指定节点</h4><p>　　　这里就不再详细举例如何对指定节点的监控了，大概的方法就是，在调用　GetChildrenZoo　的地方调用　AwexistsZoo　函数。在判断事件类型的地方，将事件类型改成增加事件和删除事件类型即可。详细的　Zookeeper C API 请访问 <a href="http://www.cnblogs.com/haippy/archive/2013/02/21/2920280.html" target="_blank" rel="noopener">Zookeeper C API 指南</a>，这里便不再赘述。  
+　　　　</p>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          本文作者 : Lojze <br/>
+        
+        原文链接 : <a href="">http://blog.flowlore.com/passages/c-feng-zhuang-zookeeper-c-api-trashed-2/</a><br>
+        版权声明 : 版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出自<a href="https://blog.flowlore.com">《舍予书》</a>
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">分享到: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">知识 & 情怀 | 二者兼得</p>
+  
+  <button id="reward-btn">
+    
+    <span>投食</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/WeChat.png" alt="微信扫一扫, 向我投食">
+        <p class="qrcode-meta">微信扫一扫, 向我投食</p>
+      </div>
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/AliPay.jpg" alt="支付宝扫一扫, 向我投食">
+        <p class="qrcode-meta">支付宝扫一扫, 向我投食</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/C-封装-Zookeeper-C-API/">
+              #C++ 封装 Zookeeper C API
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/Zookeeper/">
+              #Zookeeper
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/zookeeper-C-API/">
+              #zookeeper C++ API
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/zookeeper-c-调用方法/">
+              #zookeeper c++ 调用方法
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/zookeeper-c-接口/">
+              #zookeeper c++接口
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/zookeeper-cpp/">
+              #zookeeper cpp
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/zookeeper-cppp/">
+              #zookeeper cppp
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        上一篇:
+        <a href="/passages/wan-yuan-xuan-shang-hui-fu-nei-cun-ka-shi-pin-shu/" target="_self">万元悬赏 —— 恢复内存卡视频数据</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        下一篇:
+        <a href="/passages/da-bian-tong-du-shu-bi-ji/" target="_self">《大便通》 读书笔记</a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> 留下足迹 <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz",
+      appKey: "1m0ym3IWOSrAx7sea858S9ES",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "正确填写邮箱, 才能及时收到回复哦♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz", "1m0ym3IWOSrAx7sea858S9ES");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2017, 0, 16).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>

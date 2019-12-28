@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
+  
+  
+  
+  <title>centos7 下 mysql安装和常见配置 | 舍予书</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="MySQL,centos7,centos7安装MySQL,linux安装MySQL,Linux维护,MySQL备份,MySQL安装,MySQL恢复备份,MySQL配置,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+    <meta name="description" content="舍予书-是我在工作和生活中的一些心得和经验，在这里分享给大家，期望能够对你有所帮助">
+  
+
+  
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">舍予书</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              主页
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              归档
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>抓到我</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/LojzeLiu" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.zhihu.com/people/LojzeLiu/activities" 
+                    target="_blank"
+                  >
+                    知乎
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>centos7 下 mysql安装和常见配置</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      发布 : 
+      2017-09-23
+    </span>
+    
+      <span>
+        分类 : 
+          <a href="/categories/MySQL/">
+            MySQL
+          </a>
+      </span>
+    
+    
+      <span>
+        浏览 : <span class="article-timer" data-identity="centos7-xia-mysql-an-zhuang-he-chang-jian-pei-zhi"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <blockquote>
+<p>　　由于MySQL的小巧、功能齐全、查询迅捷等有点，我在很多地方都用到了MySQL。但是由于他是多平台的数据库，所以很多的默认配置也是适合多种情况的需求，因此需要我们在自定义的环境下对MySQL进行配置，从而使其更具安全。<br>　　今天在这里将我常用到的一些安全配置拿出来做个分享，期望大家指出不足之处。</p>
+</blockquote>
+<h2 id="安装MySQL"><a href="#安装MySQL" class="headerlink" title="安装MySQL"></a>安装MySQL</h2><p>　　由于 CentOS7 将MySQL数据库软件从默认的程序列表中移除，并使用MariaDB代替。所以这里我们使用YUM安装MariaDB。</p>
+<h3 id="MariaDB安装命令"><a href="#MariaDB安装命令" class="headerlink" title="MariaDB安装命令 "></a>MariaDB安装命令 </h3><p><code>sudo yum install mariadb-server mariadb</code></p>
+<h2 id="MariaDB-管理命令"><a href="#MariaDB-管理命令" class="headerlink" title="MariaDB 管理命令"></a>MariaDB 管理命令</h2><h3 id="启动MariaDB"><a href="#启动MariaDB" class="headerlink" title="启动MariaDB"></a>启动MariaDB</h3><p><code>sudo systemctl start mariadb</code></p>
+<h3 id="停止MariaDB"><a href="#停止MariaDB" class="headerlink" title="停止MariaDB"></a>停止MariaDB</h3><p><code>sudo systemctl stop mariadb</code></p>
+<h3 id="重启-MariaDB"><a href="#重启-MariaDB" class="headerlink" title="重启 MariaDB"></a>重启 MariaDB</h3><p><code>sudo systemctl restart mariadb</code></p>
+<h3 id="设置MariaDB为开机启动"><a href="#设置MariaDB为开机启动" class="headerlink" title="设置MariaDB为开机启动"></a>设置MariaDB为开机启动</h3><p><code>sudo systemctl enable mariadb</code></p>
+<h3 id="设置-root-密码"><a href="#设置-root-密码" class="headerlink" title="设置 root 密码"></a>设置 root 密码</h3><p><code>mysqladmin -u root password “upassword”</code></p>
+<p>上面的命令是修改“root”用户的密码，其中双引号中间的 upassword 就是你欲设置的密码。</p>
+<h3 id="登录MySQL服务器"><a href="#登录MySQL服务器" class="headerlink" title="登录MySQL服务器"></a>登录MySQL服务器</h3><p><code>mysql -u root -p</code></p>
+<p>上面的命令中“root”是你的用户名，-p是告诉mysql需要输入密码。按下回车后会提示你输入密码，这时候你输入刚才设置的密码即可登录。</p>
+<h2 id="MySQL常用配置"><a href="#MySQL常用配置" class="headerlink" title="MySQL常用配置"></a>MySQL常用配置</h2><p>　　至此 MySQL 就算安装完成了，下面便说一下我常用到的一些常用的配置。  
+　　</p>
+<h3 id="修改-Root-用户密码并删除空密码项"><a href="#修改-Root-用户密码并删除空密码项" class="headerlink" title="修改 Root 用户密码并删除空密码项"></a>修改 Root 用户密码并删除空密码项</h3><p>　　MySQL安装后root用户默认是空密码，处于安全起见，需要将其修改该为强密码（所谓强密码就是8位以上，并且有大小写字母、数字和符号组成的不规律密码）。<br>　　修改密码我们在上面已经讲到，当然你也可以登录MySQL之后使用SQL语句直接修改。这里主要讲下删除空密码项。</p>
+<p><strong>显示MySQL所有库</strong></p>
+<p><code>show databases;</code></p>
+<p><strong>选择MySQL管理库</strong></p>
+<p><code>use mysql;</code> </p>
+<p><strong>显示当前库中所有表</strong></p>
+<p><code>show tables;</code></p>
+<p><strong>使用查询语句程序MySQL当前用户</strong></p>
+<p><code>select User,password,host from user;</code>  </p>
+<p>执行该命令后会有以下输出，我们看到有三个root用户密码为空的用户。我们现在要做的就是删除这三个用户。<br><img src="https://www.flowlore.com/wp-content/uploads/2017/09/屏幕快照-2017-09-12-11.32.02.png" alt="屏幕快照 2017-09-12 11.32.02">￼ </p>
+<p><strong>删除密码为空的root用户</strong></p>
+<p><code>delete from user where user=&#39;root&#39; and password=&#39; &#39;;</code></p>
+<p>执行该命令后如向下图出现 </p>
+<p><strong>“Query OK”</strong></p>
+<p>提示，则代表删除成功。这时再次执行上面的查询语句，可以看到之前的三个密码为空的root用户被删除了。接下来我们还需要删除下图中两个用户和密码都为空的内容。</p>
+<p><img src="https://www.flowlore.com/wp-content/uploads/2017/09/屏幕快照-2017-09-12-11.35.41.png" alt="屏幕快照 2017-09-12 11.35.41">￼ </p>
+<p><strong>删除密码帐号都为空的内容</strong></p>
+<p><code>delete from user where user=&#39;&#39; and password=&#39;&#39;;</code></p>
+<p>执行该命令后，使用查询语句查询，你会发现上面的两个用户和密码都为空的内容都已经被删除了。</p>
+<p><img src="https://www.flowlore.com/wp-content/uploads/2017/09/屏幕快照-2017-09-12-11.39.01.png" alt="屏幕快照 2017-09-12 11.39.01">￼</p>
+<h3 id="修改-MySQL-管理帐号名"><a href="#修改-MySQL-管理帐号名" class="headerlink" title="修改 MySQL 管理帐号名"></a>修改 MySQL 管理帐号名</h3><p>MySQL 的默认管理员名称是root，而这个名称很容易被攻击者猜到。所以我们需要修改下这个名称，在修改时请注意不要修改为admin等常见形式。 </p>
+<p><strong>修改管理员名称</strong></p>
+<p><code>update user set user=&quot;flowlore&quot; where user=&quot;root&quot;;</code></p>
+<p>执行该命令后，我们查看该用户，发现之前的root 改为了flowlore。</p>
+<p><img src="https://www.flowlore.com/wp-content/uploads/2017/09/屏幕快照-2017-09-12-12.23.01.png" alt="屏幕快照 2017-09-12 12.23.01">￼</p>
+<h3 id="限制连接方式"><a href="#限制连接方式" class="headerlink" title="限制连接方式"></a>限制连接方式</h3><p>　　在上图中，第三个字段 host 表示允许登入 MySQL 的 ip 地址或 hostname，我这里只留了一个localhost 表示 flowlore 用户只允许在本地登入 MySQL。<br>　　这里你也可以添加其它地址，如果你不想做任何限制，只需一个 <strong>%</strong> 即可。如果你指向某一个 ip 才可以链接就在这里输入你的 ip，如果你想只允许某一个 ip 段才可以链接就添加一个 <strong>172.%</strong> 的限制，该值表示只允许172开头的ip才可以登录。  
+　　</p>
+<h2 id="MySQL-备份方案"><a href="#MySQL-备份方案" class="headerlink" title="MySQL 备份方案"></a>MySQL 备份方案</h2><p>　　数据库中的数据是无价的，所以我们一定要多做备份，要多做备份，要多做备份。</p>
+<h3 id="备份"><a href="#备份" class="headerlink" title="备份"></a>备份</h3><p>　　备份中我习惯使用 mysqldump 工具，该工具可以将 MySQL 中的数据装载到一个单独的文本文件中。这个文件可以让你很轻松的恢复数据。 <strong>备份命令</strong></p>
+<p><code>/usr/bin/mysqldump -u username -puserpassword DBname | gzip &gt; backPath/backName.sql.gz</code></p>
+<p>　　这个命令中 <strong>“/usr/bin/”</strong> 代表的是程序路径，也许会根据环境而有所不同。<strong>“-u username -puserpassword”</strong> 这段命令代表用户名和密码，这里需要注意的是 -p 后面直接跟密码。<strong>“DBname”</strong> 代表的是要备份的库名，<strong>“backPath/backName.sql.gz”</strong> 代表的是备份路径和备份文件名称。  
+　　</p>
+<h3 id="恢复数据"><a href="#恢复数据" class="headerlink" title="恢复数据"></a>恢复数据</h3><p><strong>恢复命令</strong></p>
+<p><code>gzip -d backName.sql.gz</code></p>
+<p>上面的命令是对压缩文件的解压，解压后会的到一个 后缀为.sql的文件。</p>
+<p><code>mysql -u username -p DBname &lt; packName.sql</code><br>上面的命令是对数据的恢复，其中 DBname 就是要恢复的数据库名称。</p>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          本文作者 : Lojze <br/>
+        
+        原文链接 : <a href="">http://blog.flowlore.com/passages/centos7-xia-mysql-an-zhuang-he-chang-jian-pei-zhi/</a><br>
+        版权声明 : 版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出自<a href="https://blog.flowlore.com">《舍予书》</a>
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">分享到: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">知识 & 情怀 | 二者兼得</p>
+  
+  <button id="reward-btn">
+    
+    <span>投食</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/WeChat.png" alt="微信扫一扫, 向我投食">
+        <p class="qrcode-meta">微信扫一扫, 向我投食</p>
+      </div>
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/AliPay.jpg" alt="支付宝扫一扫, 向我投食">
+        <p class="qrcode-meta">支付宝扫一扫, 向我投食</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/centos7/">
+              #centos7
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/centos7安装MySQL/">
+              #centos7安装MySQL
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/linux安装MySQL/">
+              #linux安装MySQL
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/Linux维护/">
+              #Linux维护
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/MySQL备份/">
+              #MySQL备份
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/MySQL安装/">
+              #MySQL安装
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/MySQL恢复备份/">
+              #MySQL恢复备份
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/MySQL配置/">
+              #MySQL配置
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        上一篇:
+        <a href="/passages/cfeng-zhuang-inotify-shi-xian-jian-kong-wen-jian-s/" target="_self">C++封装 inotify 实现监控文件事件</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        下一篇:
+        <a href="/passages/cc-fastcgi-http/" target="_self">C/C + + 使用 FastCGI 实现 HTTP 服务</a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> 留下足迹 <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz",
+      appKey: "1m0ym3IWOSrAx7sea858S9ES",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "正确填写邮箱, 才能及时收到回复哦♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz", "1m0ym3IWOSrAx7sea858S9ES");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2017, 0, 16).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>

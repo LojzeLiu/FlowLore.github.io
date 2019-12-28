@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
+  
+  
+  
+  <title>树莓派内网穿透，实现远程控制 | 舍予书</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="树莓派折腾记,FRP搭建教程,Linux内网穿透,Linux实现远程控制,Linux搭建FRP,树莓派内网穿透,树莓派实现远程控制,树莓派搭建FRP,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+    <meta name="description" content="舍予书-是我在工作和生活中的一些心得和经验，在这里分享给大家，期望能够对你有所帮助">
+  
+
+  
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">舍予书</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              主页
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              归档
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>抓到我</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/LojzeLiu" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.zhihu.com/people/LojzeLiu/activities" 
+                    target="_blank"
+                  >
+                    知乎
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>树莓派内网穿透，实现远程控制</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      发布 : 
+      2017-08-19
+    </span>
+    
+      <span>
+        分类 : 
+          <a href="/categories/树莓派折腾记/">
+            树莓派折腾记
+          </a>
+      </span>
+    
+    
+      <span>
+        浏览 : <span class="article-timer" data-identity="shu-mei-pai-nei-wang-chuan-tou-shi-xian-yuan-cheng"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <blockquote>
+<p>　　本篇博客讲解了树莓派的内网穿透实现 SSH远程控制。本文章出自<a href="http://www.flowlore.com" target="_blank" rel="noopener">舍予书</a>,如需转载，请保留该声明，谢谢。</p>
+</blockquote>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>　　由于大多数树莓派是在内网环境运行，所以想实现外网访问就需要搭建一个通道。而这个通道又需要一台具有外网 IP 的服务器来做桥梁。这个桥梁可以使用自己的服务器或者使用 花生壳 来实现。而这两种方法都有各自的不足之处，下面就分别讲解下两种不同的实现方法。</p>
+<h2 id="拥有外网服务器：通过-FRP-实现内网穿透"><a href="#拥有外网服务器：通过-FRP-实现内网穿透" class="headerlink" title="拥有外网服务器：通过 FRP 实现内网穿透"></a>拥有外网服务器：通过 FRP 实现内网穿透</h2><p>　　使用自己的外网服务器做内网穿透，可以做的多端口映射。但是对于没有服务器的小伙伴来说成本比较大。</p>
+<h3 id="服务器端安装-FRP"><a href="#服务器端安装-FRP" class="headerlink" title="服务器端安装 FRP"></a>服务器端安装 FRP</h3><h4 id="下载FRP"><a href="#下载FRP" class="headerlink" title="下载FRP"></a>下载FRP</h4><p>下载地址：<a href="https://github.com/fatedier/frp/releases" target="_blank" rel="noopener">https://github.com/fatedier/frp/releases</a> 　　<strong>下载的时候注意下</strong>，frp 会有多平台的版本，所以你要更具自己实际情况选择。如下图，如果你的服务器是linux64 位就下载frp_0.13.0_linux_amd64.tar.gz，如果是32位就下载frp_0.13.0_linux_386.tar.gz, 下载错了是无法运行的，我的服务器系统是 Centos7 64bit 下载 amd64的，树莓派下载 arm 的是都可以正常执行的。<br>　　<br><img src="http://www.flowlore.com/wp-content/uploads/2017/08/屏幕快照-2017-08-17-18.58.04-1.png" alt="屏幕快照 2017-08-17 18.58.04">￼<br>　　如果你尝试了几个版本都无法运行，则可以下载最下面的源码，进行源码安装。</p>
+<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>　　下载下来的程序是已经编译好的可执行二进制文件。所以只需要解压即可。</p>
+<h5 id="解压"><a href="#解压" class="headerlink" title="解压"></a>解压</h5><p><code>tar -xzvf frp_0.13.0_linux_amd64.tar.gz</code><br>解压后的文件中是包含服务器端和客户端的，处于对空间的节省考虑删除掉不必要的文件。　<br><code>cd frp_0.13.0_linux_amd64</code><br><code>rm frpc*</code></p>
+<h5 id="修改配置文件"><a href="#修改配置文件" class="headerlink" title="修改配置文件"></a>修改配置文件</h5><p><code>vi frps.ini</code> 在打开的文件中添加下配置：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">[common]</span><br><span class="line"><span class="meta">#</span>bind_addr = 0.0.0.0</span><br><span class="line">bind_port = 7000</span><br><span class="line">vhost_http_port = 80</span><br><span class="line">vhost_https_port = 443</span><br><span class="line"><span class="meta">#</span>dashboard_port = 7500</span><br><span class="line"><span class="meta">#</span> assets_dir = ./static</span><br><span class="line">log_file = ./frps.log</span><br><span class="line">log_level = info</span><br><span class="line">log_max_days = 3</span><br><span class="line"></span><br><span class="line">privilege_mode = true</span><br><span class="line">privilege_allow_ports = 2000-3000,3001,3003,4000-50000</span><br><span class="line">max_pool_count = 100</span><br><span class="line"></span><br><span class="line">[ssh]</span><br><span class="line">type = tcp</span><br><span class="line"><span class="meta">#</span>bind_addr = 0.0.0.0</span><br><span class="line">listen_port = 3000</span><br><span class="line"></span><br><span class="line">[web01]</span><br><span class="line">type = http</span><br><span class="line">custom_domains = www.flowlore.com</span><br><span class="line"></span><br><span class="line">[web02]</span><br><span class="line">type = http</span><br><span class="line">custom_domains = wiki.flowlore.com</span><br></pre></td></tr></table></figure>
+<p>这里对上面的配置进行一一讲解：</p>
+<ul>
+<li>[common]：是全局设置</li>
+<li>bind_port = 7000 ：是frp在服务器监听的端口，也是用来和客户端建立通信的端口。</li>
+<li>vhost_http_port = 80：是http协议端口，在之后的域名后面需要加相应的端口号（ps：如果是80则不需要，注意，如果服务器有web服务，可能和web服务发送冲突。）</li>
+<li>vhost_https_port = 443：https协议端口，和http的差不多，也许也需要注意和其它服务冲突。</li>
+<li>log_file = ./frps.log：日志记录路径</li>
+<li>log_level = info：日志记录级别</li>
+<li>max_pool_count = 100：最大链接数</li>
+<li>[ssh]：是对ssh进行转接配置</li>
+<li>type = tcp：链接类型</li>
+<li>listen_port = 3000：监听端口，建立成功后，ssh 连接时需要指定该端口。例如：ssh -oProt=3000 <a href="mailto:root@xxx.xxx.xxx.xx" target="_blank" rel="noopener">root@xxx.xxx.xxx.xx</a></li>
+<li>[web01]：是对web服务器的转接，也就是实现访问内网的web页面的设置。</li>
+<li>type = http：协议类型</li>
+<li>custom_domains = <a href="http://www.flowlore.com" target="_blank" rel="noopener">www.flowlore.com</a> ：监视域名，这里需要将这里指定的域名 A 记录解析到该frp运行的服务器上。</li>
+</ul>
+<p>这里可以设置多个Web服务器，只需修改 web0N 即可。</p>
+<h4 id="启动服务器端FRP"><a href="#启动服务器端FRP" class="headerlink" title="启动服务器端FRP"></a>启动服务器端FRP</h4><p><strong>绝对路径启动</strong></p>
+<p>命令中的path是 你的frp所存放的路径。 </p>
+<p><code>/path/frp_0.13.0_linux_amd64/frps -c /path/frp_0.13.0_linux_amd64/frps.ini &amp;</code> </p>
+<p><strong>相对路径启动</strong></p>
+<p><code>cd /path/frp_0.13.0_linux_amd64/</code></p>
+<p><code>./frps -c ./frps.ini &amp;</code></p>
+<h3 id="客户端（树莓派）端安装-FRP"><a href="#客户端（树莓派）端安装-FRP" class="headerlink" title="客户端（树莓派）端安装 FRP"></a>客户端（树莓派）端安装 FRP</h3><h4 id="安装-1"><a href="#安装-1" class="headerlink" title="安装"></a>安装</h4><p>　　客户端的下载安装和服务器差不多，只是客户端需要删除的是 frps* 一系列文件。不过下载的时候需要注意平台版本，我使用的是树莓派，所以下载的是 arm 版。</p>
+<h5 id="修改配置文件-1"><a href="#修改配置文件-1" class="headerlink" title="修改配置文件"></a>修改配置文件</h5><p><code>vi frpc.ini</code><br>在打开的文件中添加下配置：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">[common]</span><br><span class="line">server_addr = x.x.x.x</span><br><span class="line">server_port = 7000</span><br><span class="line">log_file = ./frpc.log</span><br><span class="line">log_level = info</span><br><span class="line">log_max_days = 3</span><br><span class="line"></span><br><span class="line">[ssh]</span><br><span class="line">type = tcp</span><br><span class="line">local_ip = 127.0.0.1</span><br><span class="line">local_port = 22</span><br><span class="line">remote_port = 3000</span><br><span class="line"></span><br><span class="line">[web01]</span><br><span class="line">type = http</span><br><span class="line">local_port = 9988</span><br><span class="line">custom_domains = www.flowlore.com</span><br><span class="line"></span><br><span class="line">[web02]</span><br><span class="line">type = http</span><br><span class="line">local_port = 8008</span><br><span class="line">custom_domains = wiki.flowlore.com</span><br></pre></td></tr></table></figure>
+<p>下面讲解下一下重要配置：</p>
+<ul>
+<li>server_addr = x.x.x.x：这里需要设置你的外网服务器 IP。</li>
+<li>server_port = 7000：这里是外网服务器的frp监听的端口，要和服务器配置成相同的。</li>
+<li>remote_port = 3000：这里要和服务器的 listen_port 设置成相同的。</li>
+<li>local_port = 998：这里是你的 web 服务监听的端口。</li>
+<li>custom_domains = <a href="http://www.flowlore.com" target="_blank" rel="noopener">www.flowlore.com</a> ：这里要和服务器的配置相对应。</li>
+</ul>
+<h4 id="启动客户端FRP"><a href="#启动客户端FRP" class="headerlink" title="启动客户端FRP"></a>启动客户端FRP</h4><p><strong>绝对路径启动</strong></p>
+<blockquote>
+<p>命令中的path是 你的frp所存放的路径。</p>
+</blockquote>
+<p><code>/path/frp_0.13.0_linux_arm/frpc -c /path/frp_0.13.0_linux_arm/frpc.ini &amp;</code> </p>
+<p><strong>相对路径启动</strong></p>
+<p><code>cd /path/frp_0.13.0_linux_arm/</code></p>
+<p><code>./frps -c ./frpc.ini &amp;</code></p>
+<h4 id="设置开机启动"><a href="#设置开机启动" class="headerlink" title="设置开机启动"></a>设置开机启动</h4><p>树莓派中的开机启动方法是在 /etc/rc.local 中增加一条 frp 的启动命令。</p>
+<ol>
+<li>首先使用编辑工具打开 /etc/rc.local 文件。</li>
+</ol>
+<p><code>vi /etc/rc.local</code></p>
+<ol start="2">
+<li>在文件最下放添加如下命令：</li>
+</ol>
+<p><code>/path/frp_0.13.0_linux_arm/frpc -c /path/frp_0.13.0_linux_arm/frpc.ini &amp;</code></p>
+<h5 id="设置树莓派等待网络链接正常后启动"><a href="#设置树莓派等待网络链接正常后启动" class="headerlink" title="设置树莓派等待网络链接正常后启动"></a>设置树莓派等待网络链接正常后启动</h5><p>　　我设置开机启动FRP时，发现总是启动失败。查看日志提示TCP链接失败，查了相关资料发现原来，树莓派需要设置等待网络链接成功后再启动才可以进行网络链接。 首先 输入下面命令进入Raspi-config设置页面， <code>sudo raspi-config</code> 输入后会进入下图页面，选择 Wait for Network at Boot选项。  </p>
+<p><img src="http://www.flowlore.com/wp-content/uploads/2017/08/屏幕快照-2017-08-19-10.02.07.png" alt="屏幕快照 2017-08-19 10.02.07">￼ </p>
+<p>选择后会看到下图，选择第一个 Change Locale，该选项表示等待网络链接成功够再启动。 </p>
+<p><img src="http://www.flowlore.com/wp-content/uploads/2017/08/屏幕快照-2017-08-19-09.50.08.png" alt="屏幕快照 2017-08-19 09.50.08">￼ </p>
+<p>　至此，便设置成功了。这里要说一下，这个是我看得资料找到的方法。由于此时我的树莓派在我折腾开机重启时，已经被整得无法开机了。所以并没有实践，也许会有坑，小心。不过之后我会写一个专门的开机启动文章，到时候会详细介绍如何设置开机启动。</p>
+<h2 id="没有外网服务器：通过-花生壳实现内网穿透"><a href="#没有外网服务器：通过-花生壳实现内网穿透" class="headerlink" title="没有外网服务器：通过 花生壳实现内网穿透"></a>没有外网服务器：通过 花生壳实现内网穿透</h2><p>　　对于没有自己服务器的同学也不需要担心，你可以使用花生壳解析。我在点击FRP之前一直使用的都是花生壳。点击这里-&gt;<a href="http://service.oray.com/question/4287.html" target="_blank" rel="noopener">花生壳linux客户端安装教程</a>，这个教程讲的很详细了，我就不再这里赘述了，Good luck。  
+　　</p>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          本文作者 : Lojze <br/>
+        
+        原文链接 : <a href="">http://blog.flowlore.com/passages/shu-mei-pai-nei-wang-chuan-tou-shi-xian-yuan-cheng/</a><br>
+        版权声明 : 版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出自<a href="https://blog.flowlore.com">《舍予书》</a>
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">分享到: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">知识 & 情怀 | 二者兼得</p>
+  
+  <button id="reward-btn">
+    
+    <span>投食</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/WeChat.png" alt="微信扫一扫, 向我投食">
+        <p class="qrcode-meta">微信扫一扫, 向我投食</p>
+      </div>
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/AliPay.jpg" alt="支付宝扫一扫, 向我投食">
+        <p class="qrcode-meta">支付宝扫一扫, 向我投食</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/FRP搭建教程/">
+              #FRP搭建教程
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/Linux内网穿透/">
+              #Linux内网穿透
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/Linux实现远程控制/">
+              #Linux实现远程控制
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/Linux搭建FRP/">
+              #Linux搭建FRP
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/树莓派内网穿透/">
+              #树莓派内网穿透
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/树莓派实现远程控制/">
+              #树莓派实现远程控制
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/树莓派搭建FRP/">
+              #树莓派搭建FRP
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        上一篇:
+        <a href="/passages/cong-0-dao-1/" target="_self">从 0 到 1</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        下一篇:
+        <a href="/passages/centos7-nginx-de-an-zhuang-he-pei-zhi-yi-ji-tian-k/" target="_self">CentOS7 nginx的安装和配置以及填坑</a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> 留下足迹 <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz",
+      appKey: "1m0ym3IWOSrAx7sea858S9ES",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "正确填写邮箱, 才能及时收到回复哦♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz", "1m0ym3IWOSrAx7sea858S9ES");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2017, 0, 16).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>

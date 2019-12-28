@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
+  
+  
+  
+  <title>C++封装 inotify 实现监控文件事件 | 舍予书</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="C/C++,IT 技术,inotify,inotify教程,inotify无法监控文件,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+    <meta name="description" content="舍予书-是我在工作和生活中的一些心得和经验，在这里分享给大家，期望能够对你有所帮助">
+  
+
+  
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">舍予书</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              主页
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              归档
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>抓到我</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/LojzeLiu" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.zhihu.com/people/LojzeLiu/activities" 
+                    target="_blank"
+                  >
+                    知乎
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>C++封装 inotify 实现监控文件事件</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      发布 : 
+      2017-09-16
+    </span>
+    
+      <span>
+        分类 : 
+          <a href="/categories/C-C/">
+            C/C++
+          </a>
+      </span>
+    
+    
+      <span>
+        浏览 : <span class="article-timer" data-identity="cfeng-zhuang-inotify-shi-xian-jian-kong-wen-jian-s"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <blockquote>
+<p>　　inotify是 Linux 自 2.6.13 起提供的一套机制，该机制容许应用程序监控文件事件。(本篇内容参考自<a href="http://union.dangdang.com/transfer.php?from=P-331141&amp;ad_type=10&amp;sys_id=1&amp;backurl=http%3A%2F%2Funion.dangdang.com%2Ftransfer.php%3Fsys_id%3D1%26ad_type%3D10%26from%3DP-331141%26backurl%3Dhttp%253A%252F%252Fproduct.dangdang.com%252Fproduct.aspx%253Fproduct_id%253D1230691006" target="_blank" rel="noopener">《Linux/UNIX 系统编程手册》</a>点击链接直接购买原书)<br>　　本篇博客主要将C++对 inotify 的封装，如果您想要了解 inotify 的基本使用请看我的前一篇博客 <a href="http://www.flowlore.com/2017/09/09/inotify-shi-yong-jiao-cheng/" target="_blank" rel="noopener">inotify使用教程</a>，这篇博客介绍了inotify的使用方法，或者你也可以<a href="http://union.dangdang.com/transfer.php?from=P-331141&amp;ad_type=10&amp;sys_id=1&amp;backurl=http%3A%2F%2Funion.dangdang.com%2Ftransfer.php%3Fsys_id%3D1%26ad_type%3D10%26from%3DP-331141%26backurl%3Dhttp%253A%252F%252Fproduct.dangdang.com%252Fproduct.aspx%253Fproduct_id%253D1230691006" target="_blank" rel="noopener">点击这里《Linux/UNIX 系统编程手册》</a>购买该书，学习 inotify 使用方法。</p>
+</blockquote>
+<h2 id="实现代码："><a href="#实现代码：" class="headerlink" title="实现代码："></a>实现代码：</h2><p><strong>UCInotify.h</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 描述：监控指定文件或文件夹下。</span></span><br><span class="line"><span class="comment"> * 作者：LiuYang</span></span><br><span class="line"><span class="comment"> * 日期：2017-9-4</span></span><br><span class="line"><span class="comment"> * */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __UCINOTIFY_H__</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __UCINOTIFY_H__</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;map&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/inotify.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;limits.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//监控事件定义</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _ACCESS_EVENT      <span class="meta-string">"IN_ACCESS"</span>         <span class="comment">//文件/目录被访问</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _ATTRIB_EVENT      <span class="meta-string">"IN_ATTRIB"</span>         <span class="comment">//文件元数据被修改</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _CLOSE_WR_EVENT    <span class="meta-string">"IN_CLOSE_WRITE"</span>    <span class="comment">//以只写方式打开的文件被关闭</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _CLOSE_NOWR_EVENT  <span class="meta-string">"IN_CLOSE_NOWRITE"</span>  <span class="comment">//以只读方式打开的文件被关闭</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _CREATE_EVNT       <span class="meta-string">"IN_CREATE"</span>         <span class="comment">//一个文件/目录 被创建</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _DELETE_SELF_EVENT <span class="meta-string">"IN_DELETE_SELF"</span>    <span class="comment">//一个文件/目录 被删除</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _MODIFY_EVENT      <span class="meta-string">"IN_MODIFY"</span>         <span class="comment">//一个文件被修改</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _MOVE_SELF_EVENT   <span class="meta-string">"IN_MOVE_SELF"</span>      <span class="comment">//被监控的目录/文件本身被移动</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _MOVED_FROM_EVENT  <span class="meta-string">"IN_MOVED_FROM"</span>     <span class="comment">//文件移除到受监控的目录之外</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _MOVED_TO_EVENT    <span class="meta-string">"IN_MOVED_TO"</span>       <span class="comment">//一个文件被一入受监控目录</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _OPEN_EVNET        <span class="meta-string">"IN_OPEN"</span>           <span class="comment">//文件被打开</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _IGNORED_EVENT     <span class="meta-string">"IN_IGNORED"</span>        <span class="comment">//受监控的项目被移除</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _ISDIR_EVENT       <span class="meta-string">"IN_ISDIR"</span>          <span class="comment">//name 返回的是一个目录</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _UNMOUNT_EVENT     <span class="meta-string">"IN_UNMOUNT"</span>        <span class="comment">//受监控文件被卸载</span></span></span><br><span class="line">    </span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> A_FILE_SIZE ((sizeof(struct inotify_event) + NAME_MAX + 1))   <span class="comment">//单个监控文件结构体的大小</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(*EventHandle)</span> <span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>, <span class="keyword">void</span> *)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UCInotify</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    UCInotify(<span class="keyword">void</span>);</span><br><span class="line">    ~UCInotify(<span class="keyword">void</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//初始话监控文件列表</span></span><br><span class="line">    <span class="comment">//参数：watch_name: 欲监控的文件名称，mask= 监控的事件，默认全部监控</span></span><br><span class="line">    <span class="keyword">size_t</span> InitWatchFile(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt; &amp;watch_name, <span class="keyword">void</span> *par, <span class="keyword">const</span> <span class="keyword">uint32_t</span> mask = IN_ALL_EVENTS);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//删除监控文件</span></span><br><span class="line">    <span class="comment">//rm_file: 欲删除的文件名称</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">RmWatchFile</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> &amp;rm_file)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//开始监控</span></span><br><span class="line">    <span class="comment">//func: 事件处理回调函数名称, </span></span><br><span class="line">    <span class="comment">//  _IGNORED_EVENT, _ATTRIB_EVENT 事件是对文件被覆盖后无法监控的处理，如果用户对该事件定义了新的回调函数，</span></span><br><span class="line">    <span class="comment">//          可能会导致文件被覆盖或vi编辑后不再监控，以及其它错误。</span></span><br><span class="line">    <span class="comment">//pid: 线程ID</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">StartWatchThread</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">map</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>, EventHandle&gt; &amp;func, <span class="keyword">pthread_t</span> &amp;_pid)</span></span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="comment">//监控线程</span></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> *<span class="title">watch_file</span><span class="params">(<span class="keyword">void</span> *self)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//添加监控文件</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">AddWatchFile</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt; &amp;watch_name, <span class="keyword">const</span> <span class="keyword">uint32_t</span> mask = IN_ALL_EVENTS)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//识别事件</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">judgeEventStr</span><span class="params">(<span class="keyword">uint32_t</span> mask, <span class="built_in">std</span>::<span class="built_in">string</span> &amp;event)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">judgeEventName</span><span class="params">(<span class="keyword">uint32_t</span> mask, <span class="built_in">std</span>::<span class="built_in">string</span> &amp;event)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//通过文件名找到 wd</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">findWD</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> &amp;file)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//重新监控文件</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Rewatch</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> &amp;watch_name)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*事件默认处理回调函数</span></span><br><span class="line"><span class="comment">     * 对一些常见的事件进行处理，如果用户覆盖则使用用户提供的</span></span><br><span class="line"><span class="comment">     * */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*监控目标被卸载</span></span><br><span class="line"><span class="comment">     *  该函数会检查所移除的文件是否存在，如果存在则从新添加监控</span></span><br><span class="line"><span class="comment">     * */</span></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">eventUnmount</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> event_file, <span class="keyword">void</span> *flags)</span></span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span>                                  m_inotifyFD;          <span class="comment">//句柄</span></span><br><span class="line">    <span class="keyword">bool</span>                                 m_isContinue;         <span class="comment">//监控进程是否继续执行</span></span><br><span class="line">    <span class="keyword">void</span>                                *m_pParameter;         <span class="comment">//回调函数扩展参数</span></span><br><span class="line">    <span class="keyword">size_t</span>                               m_watchNum;           <span class="comment">//监控文件数量</span></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">map</span>&lt;<span class="keyword">int</span>, <span class="built_in">std</span>::<span class="built_in">string</span>&gt;           m_watchFiles;         <span class="comment">//监控文件和 wd 之间的映射</span></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">map</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>, EventHandle&gt;   m_handleMap;          <span class="comment">//事件处理回调函数集合</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">//__UCINOTIFY_H__</span></span></span><br></pre></td></tr></table></figure>
+<p><strong>UCInotify.cpp</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstring&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cerrno&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstdio&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"UCInotify.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"Tools/logTools.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line">UCInotify::UCInotify(<span class="keyword">void</span>):m_inotifyFD(<span class="number">0</span>),m_isContinue(<span class="literal">true</span>),m_pParameter(<span class="literal">NULL</span>)</span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">UCInotify::~UCInotify(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//初始话监控文件列表</span></span><br><span class="line"><span class="keyword">size_t</span> UCInotify::InitWatchFile(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt; &amp;watch_name, <span class="keyword">void</span> *par, <span class="keyword">const</span> <span class="keyword">uint32_t</span> mask <span class="comment">/*= IN_ALL_EVENTS*/</span>)</span><br><span class="line">&#123;</span><br><span class="line">    m_inotifyFD = inotify_init(); <span class="comment">//创建 initify 实例</span></span><br><span class="line">    <span class="keyword">if</span>(m_inotifyFD == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        TRACE(<span class="number">1</span>, <span class="string">"initalize inotify failed."</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//初始化回调函数集</span></span><br><span class="line">    m_handleMap[_IGNORED_EVENT] = eventUnmount;</span><br><span class="line">    m_handleMap[_ATTRIB_EVENT]  = eventUnmount;</span><br><span class="line">    m_pParameter = par;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> AddWatchFile(watch_name, mask);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//添加监控文件</span></span><br><span class="line"><span class="keyword">int</span> UCInotify::AddWatchFile(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt; &amp;watch_name, <span class="keyword">const</span> <span class="keyword">uint32_t</span> mask <span class="comment">/*= IN_ALL_EVENTS*/</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">string</span>&gt;::iterator it = watch_name.begin();</span><br><span class="line">    <span class="keyword">int</span> wd;</span><br><span class="line">    <span class="keyword">while</span>(it != watch_name.end())</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">string</span> file_buf = *it++;</span><br><span class="line">        wd = inotify_add_watch(m_inotifyFD, file_buf.c_str(), mask);</span><br><span class="line">        <span class="keyword">if</span>(wd == <span class="number">-1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            TRACE(<span class="number">1</span>, <span class="string">"add watch failed."</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        m_watchFiles[wd] = file_buf;</span><br><span class="line">    &#125;</span><br><span class="line">    m_watchNum = m_watchFiles.size();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> m_watchNum;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//删除监控文件</span></span><br><span class="line"><span class="keyword">int</span> UCInotify::RmWatchFile(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> &amp;rm_file)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> wd = findWD(rm_file);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> inotify_rm_watch(m_inotifyFD, wd);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//开始监控</span></span><br><span class="line"><span class="keyword">int</span> UCInotify::StartWatchThread(<span class="built_in">std</span>::<span class="built_in">map</span>&lt;<span class="built_in">string</span>, EventHandle&gt; &amp;func, <span class="keyword">pthread_t</span> &amp;_pid)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">map</span>&lt;<span class="built_in">string</span>, EventHandle&gt;::iterator it = func.begin();</span><br><span class="line">    <span class="keyword">while</span>(it != func.end())</span><br><span class="line">    &#123;</span><br><span class="line">        m_handleMap[it-&gt;first] = it-&gt;second;</span><br><span class="line">        it++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _pid = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">return</span> pthread_create(&amp;_pid, <span class="literal">NULL</span>, watch_file, (<span class="keyword">void</span>*)<span class="keyword">this</span>); <span class="comment">//启动监控线程</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//监控线程</span></span><br><span class="line"><span class="keyword">void</span> *UCInotify::watch_file(<span class="keyword">void</span> *self)</span><br><span class="line">&#123;</span><br><span class="line">    UCInotify *pUCI = (UCInotify*)self;</span><br><span class="line">    <span class="keyword">ssize_t</span> numRead;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(pUCI-&gt;m_isContinue)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//申请特点大小的缓存</span></span><br><span class="line">        <span class="keyword">char</span> buf[pUCI-&gt;m_watchNum * A_FILE_SIZE];</span><br><span class="line">        bzero(buf, <span class="keyword">sizeof</span>(buf));</span><br><span class="line">        numRead = read(pUCI-&gt;m_inotifyFD, buf, <span class="keyword">sizeof</span>(buf));</span><br><span class="line">        <span class="keyword">if</span>(numRead &lt; <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            TRACE(<span class="number">1</span>, <span class="string">"Read inotify failed. what: "</span> &lt;&lt; strerror(errno));</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">char</span> *p = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">inotify_event</span> *<span class="title">event</span> = <span class="title">NULL</span>;</span></span><br><span class="line">        <span class="keyword">for</span>(p = buf; p &lt; (buf + numRead); )</span><br><span class="line">        &#123;</span><br><span class="line">            event = (struct inotify_event*)p;</span><br><span class="line"></span><br><span class="line">            <span class="built_in">string</span> whatEvent, eventName, watchFile;</span><br><span class="line">            pUCI-&gt;judgeEventStr(event-&gt;mask, whatEvent); <span class="comment">//获取时间名称</span></span><br><span class="line">            pUCI-&gt;judgeEventName(event-&gt;mask, eventName); <span class="comment">//获取时间名称</span></span><br><span class="line">            <span class="comment">//获取文件名称</span></span><br><span class="line">            watchFile = pUCI-&gt;m_watchFiles[event-&gt;wd];</span><br><span class="line">            TRACE(<span class="number">6</span>, <span class="string">"The event is: "</span> &lt;&lt; eventName &lt;&lt; <span class="string">" the file is: "</span> &lt;&lt; watchFile);</span><br><span class="line">            <span class="keyword">if</span>(pUCI-&gt;m_handleMap.find(eventName) != pUCI-&gt;m_handleMap.end())</span><br><span class="line">            &#123;</span><br><span class="line">                TRACE(<span class="number">6</span>, <span class="string">"The event have handle is: "</span> &lt;&lt; eventName &lt;&lt; <span class="string">" the file is: "</span> &lt;&lt; watchFile);</span><br><span class="line">                <span class="keyword">if</span>((<span class="built_in">strcmp</span>(eventName.c_str(), _IGNORED_EVENT) == <span class="number">0</span>) ||</span><br><span class="line">                    <span class="built_in">strcmp</span>(eventName.c_str(), _ATTRIB_EVENT) == <span class="number">0</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    pUCI-&gt;m_handleMap[eventName](watchFile, pUCI); <span class="comment">//监控对象自己定义的回调函数</span></span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    pUCI-&gt;m_handleMap[eventName](watchFile, pUCI-&gt;m_pParameter); <span class="comment">//用户提供的回调函数</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            p += <span class="keyword">sizeof</span>(struct inotify_event) + event-&gt;len;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//识别事件</span></span><br><span class="line"><span class="keyword">void</span> UCInotify::judgeEventStr(<span class="keyword">uint32_t</span> mask, <span class="built_in">std</span>::<span class="built_in">string</span> &amp;event)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_ACCESS)        event = <span class="string">"File access"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_ATTRIB)        event = <span class="string">"The file metadata is modified."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_CLOSE_WRITE)   event = <span class="string">"Close the file open for writing."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_CLOSE_NOWRITE) event = <span class="string">"Close the opened the file read-only."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_CREATE)        event = <span class="string">"Create a file or directory."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_DELETE_SELF)   event = <span class="string">"Delete a file or directory."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MODIFY)        event = <span class="string">"The file was modified."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MOVE_SELF)     event = <span class="string">"Move the monitored directory or file itself."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MOVED_FROM)    event = <span class="string">"File moved outside of the monitored directory."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MOVED_TO)      event = <span class="string">"File moved to of the monitored directory."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_OPEN)          event = <span class="string">"The file has been opened."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_IGNORED)       event = <span class="string">"Monitored item is unload."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_ISDIR)         event = <span class="string">"The name is directory."</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_UNMOUNT)       event = <span class="string">"Target file unload."</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> UCInotify::judgeEventName(<span class="keyword">uint32_t</span> mask, <span class="built_in">std</span>::<span class="built_in">string</span> &amp;event)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_ACCESS)        event = <span class="string">"IN_ACCESS"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_ATTRIB)        event = <span class="string">"IN_ATTRIB"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_CLOSE_WRITE)   event = <span class="string">"IN_CLOSE_WRITE"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_CLOSE_NOWRITE) event = <span class="string">"IN_CLOSE_NOWRITE"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_CREATE)        event = <span class="string">"IN_CREATE"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_DELETE_SELF)   event = <span class="string">"IN_DELETE_SELF"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MODIFY)        event = <span class="string">"IN_MODIFY"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MOVE_SELF)     event = <span class="string">"IN_MOVE_SELF"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MOVED_FROM)    event = <span class="string">"IN_MOVED_FROM"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MOVED_TO)      event = <span class="string">"IN_MOVED_TO"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_OPEN)          event = <span class="string">"IN_OPEN"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_IGNORED)       event = <span class="string">"IN_IGNORED"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_ISDIR)         event = <span class="string">"IN_ISDIR"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_UNMOUNT)       event = <span class="string">"IN_UNMOUNT"</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//通过文件名找到 wd</span></span><br><span class="line"><span class="keyword">int</span> UCInotify::findWD(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> &amp;file)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">map</span>&lt;<span class="keyword">int</span>, <span class="built_in">string</span>&gt;::iterator it = m_watchFiles.begin();</span><br><span class="line">    <span class="keyword">while</span>(it != m_watchFiles.end())</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">string</span> temp = it-&gt;second;</span><br><span class="line">        <span class="keyword">if</span>(temp == file)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> it-&gt;first;</span><br><span class="line">        &#125;</span><br><span class="line">        it++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//重新监控文件</span></span><br><span class="line"><span class="keyword">void</span> UCInotify::Rewatch(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> &amp;watch_name)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">string</span>&gt; names;</span><br><span class="line">    names.push_back(watch_name);</span><br><span class="line">    AddWatchFile(names); <span class="comment">//重新添加</span></span><br><span class="line">    TRACE(<span class="number">6</span>, <span class="string">"rewatch: "</span> &lt;&lt; watch_name);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*监控目标被卸载</span></span><br><span class="line"><span class="comment"> *  该函数会检查所移除的文件是否存在，如果存在则从新添加监控</span></span><br><span class="line"><span class="comment"> * */</span></span><br><span class="line"><span class="keyword">void</span> UCInotify::eventUnmount(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> event_file, <span class="keyword">void</span> *flags)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(flags == <span class="literal">NULL</span>) <span class="keyword">return</span> ; <span class="comment">//什么都不做</span></span><br><span class="line"></span><br><span class="line">    UCInotify *pUI = (UCInotify*)flags;</span><br><span class="line">    <span class="keyword">int</span> ret = open(event_file.c_str(), O_EXCL, O_RDONLY);</span><br><span class="line">    <span class="keyword">if</span>(ret &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(errno == EEXIST)</span><br><span class="line">        &#123;</span><br><span class="line">            pUI-&gt;Rewatch(event_file);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            TRACE(<span class="number">1</span>, <span class="string">"open err: "</span> &lt;&lt; strerror(errno));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        pUI-&gt;Rewatch(event_file);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>　　这里是代码的第一个版本，后续在使用中发现问题的修改，我会在<a href="https://coding.net/u/LojzeLiu/p/Common/git/blob/master/src%2FUCInotify.cpp" target="_blank" rel="noopener">coding</a>上更新，请你关注。  
+　　</p>
+<h2 id="封装说明"><a href="#封装说明" class="headerlink" title="封装说明"></a>封装说明</h2><p>　　在讲 <a href="http://www.flowlore.com/2017/09/09/inotify-shi-yong-jiao-cheng/" target="_blank" rel="noopener">inotify使用教程</a> 中我提到，如果使用mv、cp、vim操作或修改监控文件本身，会触发IN_IGNORED或 IN_ATTRIB事件，当这两个事件其中一个发生时，inotify便不会对文件进行监控。这是因为 mv 和 vim 会将旧的文件删除替换成新的文件，而cp会有一定机率修改文件元数据，从而inotify 会认为这是一个全新的文件，所以这些命令会导致监控中断。而在实际开发会需要避免这样的事情发生，而我的方法就是当该事件发生时对新的文件进行再次添加监控。<br>　　而上面的代码主要是将重新添加监控进行了封装，实现了文件被覆盖后依然处于被监控状态。并且该对象会启动一个线程对文件进行监控，当有事件发生时会调用用户提供的回调函数，如果未提供回调函数则忽略该操作。</p>
+<h2 id="使用注意"><a href="#使用注意" class="headerlink" title="使用注意"></a>使用注意</h2><p>　　该类使用了 inotify 的系统调用，所以使用需要 Linux 2.6.13+ 内核。</p>
+<h3 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h3><p>　　本文出自<a href="https://www.flowlore.com" target="_blank" rel="noopener">舍予书</a>，如需转载请保留该段声明。<br>　　本文内容参考自<a href="http://union.dangdang.com/transfer.php?from=P-331141&amp;ad_type=10&amp;sys_id=1&amp;backurl=http%3A%2F%2Funion.dangdang.com%2Ftransfer.php%3Fsys_id%3D1%26ad_type%3D10%26from%3DP-331141%26backurl%3Dhttp%253A%252F%252Fproduct.dangdang.com%252Fproduct.aspx%253Fproduct_id%253D1230691006" target="_blank" rel="noopener">《Linux/UNIX 系统编程手册》</a> ，点击该链接可直接购买本书。</p>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          本文作者 : Lojze <br/>
+        
+        原文链接 : <a href="">http://blog.flowlore.com/passages/cfeng-zhuang-inotify-shi-xian-jian-kong-wen-jian-s/</a><br>
+        版权声明 : 版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出自<a href="https://blog.flowlore.com">《舍予书》</a>
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">分享到: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">知识 & 情怀 | 二者兼得</p>
+  
+  <button id="reward-btn">
+    
+    <span>投食</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/WeChat.png" alt="微信扫一扫, 向我投食">
+        <p class="qrcode-meta">微信扫一扫, 向我投食</p>
+      </div>
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/AliPay.jpg" alt="支付宝扫一扫, 向我投食">
+        <p class="qrcode-meta">支付宝扫一扫, 向我投食</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/inotify/">
+              #inotify
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/inotify教程/">
+              #inotify教程
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/inotify无法监控文件/">
+              #inotify无法监控文件
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        上一篇:
+        <a href="/passages/inotify-shi-yong-jiao-cheng/" target="_self">inotify使用教程</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        下一篇:
+        <a href="/passages/centos7-xia-mysql-an-zhuang-he-chang-jian-pei-zhi/" target="_self">centos7 下 mysql安装和常见配置</a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> 留下足迹 <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz",
+      appKey: "1m0ym3IWOSrAx7sea858S9ES",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "正确填写邮箱, 才能及时收到回复哦♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz", "1m0ym3IWOSrAx7sea858S9ES");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2017, 0, 16).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>

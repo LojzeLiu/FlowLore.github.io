@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
+  
+  
+  
+  <title>CentOS7 nginx的安装和配置以及填坑 | 舍予书</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Linux 维护,Linux维护,centos7下nginx配置,centos7安装nginx,Nginx基本配置,nginx安装,nginx教程,nginx配置FCGI,nginx配置HTTPS,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+    <meta name="description" content="舍予书-是我在工作和生活中的一些心得和经验，在这里分享给大家，期望能够对你有所帮助">
+  
+
+  
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">舍予书</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              主页
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              归档
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>抓到我</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/LojzeLiu" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.zhihu.com/people/LojzeLiu/activities" 
+                    target="_blank"
+                  >
+                    知乎
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>CentOS7 nginx的安装和配置以及填坑</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      发布 : 
+      2017-08-26
+    </span>
+    
+      <span>
+        分类 : 
+          <a href="/categories/Linux-维护/">
+            Linux 维护
+          </a>
+      </span>
+    
+    
+      <span>
+        浏览 : <span class="article-timer" data-identity="centos7-nginx-de-an-zhuang-he-pei-zhi-yi-ji-tian-k"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <blockquote>
+<p>　　Nginx是一个WEB 服务器，也可以用作反向代理，负载均衡器和 HTTP缓存。该软件由 Igor Sysoev 创建，并于2004年首次公开发布。同名公司成立于2011年，以提供支持。 　　Nginx 是免费的开源软件，根据类似 BSD许可证的条款发布。大部分 Web服务器通常使用 NGINX 作为负载均衡器。<a href="#fn1">1</a></p>
+</blockquote>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>　　在CentOS7中安装 直接使用 yum 安装 nginx是无法安装的，应为 yum 没有 nginx的源，所以需要添加Nginx的源。</p>
+<h3 id="添加-Nginx-源"><a href="#添加-Nginx-源" class="headerlink" title="添加 Nginx 源"></a>添加 Nginx 源</h3><p><code>rpm -ivh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm</code></p>
+<h3 id="查看-Nginx-安装包信息"><a href="#查看-Nginx-安装包信息" class="headerlink" title="查看 Nginx 安装包信息"></a>查看 Nginx 安装包信息</h3><p><code>yum info nginx</code></p>
+<h3 id="安装-Nginx"><a href="#安装-Nginx" class="headerlink" title="安装 Nginx"></a>安装 Nginx</h3><p><code>yum install nginx</code><br>按照上面步骤操作，提示成功后。Nginx 会被安装到 <strong>/usr/local/nginx</strong> 中。执行脚本在该目录的 <strong>conf/</strong> 目录中，配置文件在 <strong>sbin/</strong> 中。</p>
+<h3 id="启动-Nginx"><a href="#启动-Nginx" class="headerlink" title="启动 Nginx"></a>启动 Nginx</h3><h4 id="手动启动"><a href="#手动启动" class="headerlink" title="手动启动"></a>手动启动</h4><p><code>/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf</code><br>这里建议使用绝对路径启动，这样当一段时间后你还能找到 nginx 的相关路径。</p>
+<h4 id="脚本启动"><a href="#脚本启动" class="headerlink" title="脚本启动"></a>脚本启动</h4><p>这里为了方便管理，我写了一个管理脚本。实现了nginx 的启动、停止、重启。这里分享出来供大家参考。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>!/bin/bash</span><br><span class="line"><span class="meta">#</span>## BEGIN INIT INFO</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span> Provides:  location_server</span><br><span class="line"><span class="meta">#</span> Required-Start:   $local_fs  $remote_fs</span><br><span class="line"><span class="meta">#</span> Required-Stop:    $local_fs  $remote_fs</span><br><span class="line"><span class="meta">#</span> Default-Start:    2 3 4 5</span><br><span class="line"><span class="meta">#</span> Default-Stop:     0 1 6</span><br><span class="line"><span class="meta">#</span> Short-Description:    initscript</span><br><span class="line"><span class="meta">#</span> Description:  This file should be used to construct scripts to be placed in /etc/init.d.</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span>## END INIT INFO</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span># Fill in name of program here.</span><br><span class="line">PROG="nginx" #程序名词</span><br><span class="line">PROG_PATH="/usr/local/nginx/sbin/"#程序路径</span><br><span class="line">PROG_ARGS="-c /usr/local/nginx/conf/nginx.conf" #参数</span><br><span class="line">PID_PATH="/home/user/pid/" #pid存放路径</span><br><span class="line"></span><br><span class="line">start() &#123;</span><br><span class="line">    if [ -e "$PID_PATH/$PROG.pid" ]; then</span><br><span class="line">        ## Program is running, exit with error.</span><br><span class="line">        echo "Error! $PROG is currently running!"</span><br><span class="line">        exit 1</span><br><span class="line">    else</span><br><span class="line">        ## Change from /dev/null to something like /var/log/$PROG if you want to save output.</span><br><span class="line">        cd $PROG_PATH</span><br><span class="line">        $PROG_PATH/$PROG $PROG_ARGS &amp;</span><br><span class="line">        pid=`ps -ef | grep $PROG | grep -v grep | awk '&#123;print $2&#125;'`</span><br><span class="line"></span><br><span class="line">        echo "$PROG started"</span><br><span class="line">        echo $pid &gt; "$PID_PATH/$PROG.pid"</span><br><span class="line">        cd - &gt; /dev/null</span><br><span class="line">    fi</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">stop() &#123;</span><br><span class="line">    echo "begin stop"</span><br><span class="line">    if [ -e "$PID_PATH/$PROG.pid" ]; then</span><br><span class="line">        ## Program is running, so stop it</span><br><span class="line">        pid=`ps -ef | grep $PROG | grep -v grep | awk '&#123;print $2&#125;'`</span><br><span class="line">        kill $pid</span><br><span class="line"></span><br><span class="line">        rm -f  "$PID_PATH/$PROG.pid"</span><br><span class="line">        echo "$PROG stopped"</span><br><span class="line">    else</span><br><span class="line">        ## Program is not running, exit with error.</span><br><span class="line">        echo "$PROG not started!"</span><br><span class="line">    fi</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span># Check to see if we are running as root first.</span><br><span class="line"><span class="meta">#</span># Found at http://www.cyberciti.biz/tips/shell-root-user-check-script.html</span><br><span class="line">if [ "$(id -u)" != "0" ]; then</span><br><span class="line">    echo "This script must be run as root"</span><br><span class="line">    exit 1</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">case "$1" in</span><br><span class="line">    start)</span><br><span class="line">        start</span><br><span class="line">        exit 0</span><br><span class="line">    ;;</span><br><span class="line">    stop)</span><br><span class="line">        stop</span><br><span class="line">        exit 0</span><br><span class="line">    ;;</span><br><span class="line">    reload|restart|force-reload)</span><br><span class="line">        stop</span><br><span class="line">        start</span><br><span class="line">        exit 0</span><br><span class="line">    ;;</span><br><span class="line">    **)</span><br><span class="line">        echo "Usage: $0 &#123;start|stop|reload&#125;" 1&gt;&amp;2</span><br><span class="line">        exit 1</span><br><span class="line">    ;;</span><br><span class="line">esac</span><br></pre></td></tr></table></figure>
+<h3 id="验证安装"><a href="#验证安装" class="headerlink" title="验证安装"></a>验证安装</h3><p>安装并启动成功之后，在你的路由器输入，你服务器 IP。如果显示下面的节目即表示 Nginx 安装成功。<br><img src="http://www.flowlore.com/wp-content/uploads/2017/08/359161-20160118150017513-1715983539.png" alt="359161-20160118150017513-1715983539">￼</p>
+<h2 id="Nginx配置"><a href="#Nginx配置" class="headerlink" title="Nginx配置"></a>Nginx配置</h2><h3 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">user www; #这里是启动nginx 的用户，这个用户必须真实存在。</span><br><span class="line">worker_processes  1; #启动的nginx线程数量，建议和你的内核数量相同。</span><br><span class="line"></span><br><span class="line">error_log  /usr/local/nginx/logs/error.log  info;#错误日志存储路径和文件名</span><br><span class="line">pid        /usr/local/nginx/logs/nginx.pid; #pid存储路径</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">    worker_connections  1024;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">    include       mime.types;</span><br><span class="line">    default_type  application/octet-stream;</span><br><span class="line">    sendfile        on;</span><br><span class="line"></span><br><span class="line">    keepalive_timeout  65;</span><br><span class="line"></span><br><span class="line">    server  &#123;</span><br><span class="line">            #这里每个网址具体的配置，下面会做详细介绍。</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由于我属于拿来主义，所以好的术语并不专业，还望多多见谅。</p>
+<h3 id="MediaWiki-伪静态配置"><a href="#MediaWiki-伪静态配置" class="headerlink" title="MediaWiki 伪静态配置"></a>MediaWiki 伪静态配置</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"> server</span><br><span class="line"> &#123;</span><br><span class="line">      listen 80;#监听端口</span><br><span class="line">       server_name wiki.flowlore.com;#域名</span><br><span class="line">       index index.html index.htm index.php;</span><br><span class="line">           root /var/html;</span><br><span class="line">       location ~ .*\.(php|php5)?$</span><br><span class="line">       &#123;</span><br><span class="line">           root /var/html;</span><br><span class="line">           fastcgi_pass 127.0.0.1:9000;</span><br><span class="line">           fastcgi_index index.php;</span><br><span class="line">               fastcgi_param  SCRIPT_FILENAME  /$document_root$fastcgi_script_name;</span><br><span class="line">           include fastcgi.conf;</span><br><span class="line">       &#125;</span><br><span class="line">       location ~ .*\.(gif|jpg|jpeg|png|bmp|swf|ico)$</span><br><span class="line">       &#123;</span><br><span class="line">           expires 30d;</span><br><span class="line">           # access_log off;</span><br><span class="line">       &#125;</span><br><span class="line">       location ~ .*\.(js|css)?$</span><br><span class="line">       &#123;</span><br><span class="line">           expires 15d;</span><br><span class="line">           # access_log off;</span><br><span class="line">       &#125;</span><br><span class="line">       access_log off;</span><br><span class="line">    </span><br><span class="line">       #MediaWiki shortcut rule</span><br><span class="line">       location ~ ^\/.+$ &#123;</span><br><span class="line">           if ($request_uri ~ ^/images)      &#123; break; &#125;</span><br><span class="line">           if ($request_uri ~ ^/resources)   &#123; break; &#125;</span><br><span class="line">           if ($request_uri ~ ^/index\.php)  &#123; break; &#125;</span><br><span class="line">           if ($request_uri ~ ^/index\.php)  &#123; break; &#125;</span><br><span class="line">           rewrite ^/(.+)$ /index.php?title=$1 last;</span><br><span class="line">       &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="HTTPS-配置"><a href="#HTTPS-配置" class="headerlink" title="HTTPS 配置"></a>HTTPS 配置</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">server</span><br><span class="line"> &#123;</span><br><span class="line">       #监听端口</span><br><span class="line">       listen 80;</span><br><span class="line">       #ssl参数</span><br><span class="line">       listen              443 ssl;</span><br><span class="line">       server_name         flowlore.com www.flowlore.com;</span><br><span class="line">       #证书文件</span><br><span class="line">       ssl_certificate     /var/www.flowlore.com.crt;</span><br><span class="line">       #私钥文件</span><br><span class="line">       ssl_certificate_key /var/www.flowlore.com_key.txt;</span><br><span class="line">       #优先采取服务器算法</span><br><span class="line">       ssl_prefer_server_ciphers on;</span><br><span class="line">       #使用DH文件</span><br><span class="line">       ssl_dhparam         /etc/ssl/certs/dhparam.pem;</span><br><span class="line">       ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;</span><br><span class="line">       #定义算法</span><br><span class="line">       ssl_ciphers "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4";</span><br><span class="line">       #HSTS策略</span><br><span class="line">       #add_header Strict-Transport-Security "max-age=31536000; includeSubDomains;preload" always;</span><br><span class="line">       #减少点击劫持</span><br><span class="line">       add_header X-Frame-Options DENY;</span><br><span class="line">       #禁止服务器自动解析资源类型</span><br><span class="line">       add_header X-Content-Type-Options nosniff;</span><br><span class="line">       #防XSS攻击</span><br><span class="line">       add_header X-Xss-Protection 1;</span><br><span class="line">       root /home/www/blog;</span><br><span class="line">       index index.html index.htm index.php;</span><br><span class="line">    </span><br><span class="line">       location /</span><br><span class="line">       &#123;</span><br><span class="line">           try_files $uri $uri/ /index.php?q=$uri&amp;$args;</span><br><span class="line">       &#125;</span><br><span class="line">    </span><br><span class="line">       location ~ .*\.(php|php5)?$</span><br><span class="line">       &#123;</span><br><span class="line">           fastcgi_pass 127.0.0.1:9000;</span><br><span class="line">           fastcgi_index index.php;</span><br><span class="line">           fastcgi_param  SCRIPT_FILENAME  /$document_root$fastcgi_script_name;</span><br><span class="line">          include fastcgi.conf;</span><br><span class="line">       &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Fcgi-接口配置"><a href="#Fcgi-接口配置" class="headerlink" title="Fcgi 接口配置"></a>Fcgi 接口配置</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">server &#123;</span><br><span class="line">               listen       2080;</span><br><span class="line">               server_name  www.flowlore.com;</span><br><span class="line">               #access_log  logs/host.access.log  main;</span><br><span class="line">               error_page   500 502 503 504  /50x.html;</span><br><span class="line">               root /var/files;</span><br><span class="line">               location = /50x.html &#123;</span><br><span class="line">                       root   html;</span><br><span class="line">               &#125;</span><br><span class="line">               #ip limit</span><br><span class="line">    </span><br><span class="line">               location ~ ^/cgi-bin/cgi_name.fcgi</span><br><span class="line">               &#123;</span><br><span class="line">                       root cgi-bin;</span><br><span class="line">                       fastcgi_pass 127.0.0.1:8011;</span><br><span class="line">                       include fastcgi.conf;</span><br><span class="line">               &#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<ol>
+<li>该介绍摘自 <a href="https://zh.wikipedia.org/wiki/Nginx" target="_blank" rel="noopener">维基百科</a> <a href="#fnl">↩</a></li>
+</ol>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          本文作者 : Lojze <br/>
+        
+        原文链接 : <a href="">http://blog.flowlore.com/passages/centos7-nginx-de-an-zhuang-he-pei-zhi-yi-ji-tian-k/</a><br>
+        版权声明 : 版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出自<a href="https://blog.flowlore.com">《舍予书》</a>
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">分享到: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">知识 & 情怀 | 二者兼得</p>
+  
+  <button id="reward-btn">
+    
+    <span>投食</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/WeChat.png" alt="微信扫一扫, 向我投食">
+        <p class="qrcode-meta">微信扫一扫, 向我投食</p>
+      </div>
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/AliPay.jpg" alt="支付宝扫一扫, 向我投食">
+        <p class="qrcode-meta">支付宝扫一扫, 向我投食</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/Linux维护/">
+              #Linux维护
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/centos7下nginx配置/">
+              #centos7下nginx配置
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/centos7安装nginx/">
+              #centos7安装nginx
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/Nginx基本配置/">
+              #Nginx基本配置
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/nginx安装/">
+              #nginx安装
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/nginx教程/">
+              #nginx教程
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/nginx配置FCGI/">
+              #nginx配置FCGI
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/nginx配置HTTPS/">
+              #nginx配置HTTPS
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        上一篇:
+        <a href="/passages/shu-mei-pai-nei-wang-chuan-tou-shi-xian-yuan-cheng/" target="_self">树莓派内网穿透，实现远程控制</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        下一篇:
+        <a href="/passages/inotify-shi-yong-jiao-cheng/" target="_self">inotify使用教程</a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> 留下足迹 <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz",
+      appKey: "1m0ym3IWOSrAx7sea858S9ES",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "正确填写邮箱, 才能及时收到回复哦♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz", "1m0ym3IWOSrAx7sea858S9ES");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2017, 0, 16).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>

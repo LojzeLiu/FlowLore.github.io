@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
+  
+  
+  
+  <title>inotify使用教程 | 舍予书</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="C/C++,C++,inotify,inotify使用教程,inotify如何监控文件,linux下监控文件变化,linux编程,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+    <meta name="description" content="舍予书-是我在工作和生活中的一些心得和经验，在这里分享给大家，期望能够对你有所帮助">
+  
+
+  
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">舍予书</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              主页
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              归档
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>抓到我</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/LojzeLiu" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.zhihu.com/people/LojzeLiu/activities" 
+                    target="_blank"
+                  >
+                    知乎
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>inotify使用教程</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      发布 : 
+      2017-09-09
+    </span>
+    
+      <span>
+        分类 : 
+          <a href="/categories/C-C/">
+            C/C++
+          </a>
+      </span>
+    
+    
+      <span>
+        浏览 : <span class="article-timer" data-identity="inotify-shi-yong-jiao-cheng"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <blockquote>
+<p>　　inotify是 Linux 自 2.6.13 起提供的一套机制，该机制容许应用程序监控文件事件。(本篇内容参考自<a href="http://union.dangdang.com/transfer.php?from=P-331141&amp;ad_type=10&amp;sys_id=1&amp;backurl=http%3A%2F%2Funion.dangdang.com%2Ftransfer.php%3Fsys_id%3D1%26ad_type%3D10%26from%3DP-331141%26backurl%3Dhttp%253A%252F%252Fproduct.dangdang.com%252Fproduct.aspx%253Fproduct_id%253D1230691006" target="_blank" rel="noopener">《Linux/UNIX 系统编程手册》</a>点击链接直接购买原书)</p>
+</blockquote>
+<h2 id="inotify-API-介绍"><a href="#inotify-API-介绍" class="headerlink" title="inotify API 介绍"></a>inotify API 介绍</h2><h3 id="inotify-init"><a href="#inotify-init" class="headerlink" title="inotify_init()"></a>inotify_init()</h3><p><strong>函数原型</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/inotify.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">inotify_init</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+<p><strong>说明</strong><br>　　该系统调用回返回一个文件描述符（句柄），该描述符用于在后续操作中指代次inotify实例。</p>
+<h3 id="inotify-add-watch"><a href="#inotify-add-watch" class="headerlink" title="inotify_add_watch()"></a>inotify_add_watch()</h3><p><strong>函数原型</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/inotify.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">inotify_add_watch</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">const</span> <span class="keyword">char</span> *pathname, <span class="keyword">uint32_t</span> mask)</span></span>;</span><br></pre></td></tr></table></figure>
+<p><strong>参数：</strong></p>
+<ul>
+<li>fd 是有 inotify_init()函数所返回的描述符。</li>
+<li>parhname 是欲创建或修改的监控选项所对应的文件，应用程序必须对该文件有可读权限。</li>
+<li>mask 为一位掩码，指定了意欲监控的事件。</li>
+</ul>
+<p><strong>说明</strong><br>　　该系统调用可以追加新的监控项。如果是一个新的文件 inotify_add_watch() 回在列表中创建新的监控项，并返回一新的、非负监控描述符。若是一个已经被监控的文件，inotify_add_watch() 回修改现有的监控项的掩码，并返回起监控描述符（该描述符就是之前 inotify_add_watch()所返回的描述符）。  
+　　</p>
+<h3 id="inotify-rm-watch"><a href="#inotify-rm-watch" class="headerlink" title="inotify_rm_watch()"></a>inotify_rm_watch()</h3><p><strong>函数原型</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/inotify.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">inotify_rm_watch</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">uint32_t</span> wd)</span></span>;</span><br></pre></td></tr></table></figure>
+<p><strong>参数：</strong></p>
+<ul>
+<li>fd 是 inotify_init() 调用返回的描述符。</li>
+<li>wd 是一个监控描述符，是 inotify_add_watch() 的返回。</li>
+</ul>
+<p><strong>说明</strong><br>　　initofy_rm_watch() 系统调用会从 fd 所指代的 inotify 实例中，删除 wd 所指定的监控项。</p>
+<h2 id="Inotify-事件"><a href="#Inotify-事件" class="headerlink" title="Inotify 事件"></a>Inotify 事件</h2><p>　　这里只列出常用的几个事件，如果想了解全部的事件，请阅读<a href="http://union.dangdang.com/transfer.php?from=P-331141&amp;ad_type=10&amp;sys_id=1&amp;backurl=http%3A%2F%2Funion.dangdang.com%2Ftransfer.php%3Fsys_id%3D1%26ad_type%3D10%26from%3DP-331141%26backurl%3Dhttp%253A%252F%252Fproduct.dangdang.com%252Fproduct.aspx%253Fproduct_id%253D1230691006" target="_blank" rel="noopener">《Linux/UNIX 系统编程手册》</a>。</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IN_ACCESS</td>
+<td>文件被访问（read()）</td>
+</tr>
+<tr>
+<td>IN_ATTRIB</td>
+<td>文件元数据改变</td>
+</tr>
+<tr>
+<td>IN_CLOSE_WRITE</td>
+<td>关闭为了写入而打开的文件</td>
+</tr>
+<tr>
+<td>IN_CLOSE_NOWRITE</td>
+<td>关闭一只读方式打开的文件</td>
+</tr>
+<tr>
+<td>IN_CREATE</td>
+<td>在受监控目录内创建了文件/目录</td>
+</tr>
+<tr>
+<td>IN_DELETE</td>
+<td>在受监控目录内删除文件/目录</td>
+</tr>
+<tr>
+<td>IN_DELETE_SELF</td>
+<td>受监控目录/文件本身被删除。</td>
+</tr>
+<tr>
+<td>IN_MODIFY</td>
+<td>文件被修改</td>
+</tr>
+<tr>
+<td>IN_MOVE_SELF</td>
+<td>受监控目录/文件本身被移动</td>
+</tr>
+<tr>
+<td>IN_MOVED</td>
+<td>文件被移</td>
+</tr>
+<tr>
+<td>IN_OPEN</td>
+<td>文件被打开</td>
+</tr>
+<tr>
+<td>IN_ALL_EVENTS</td>
+<td>以上所有输出事件的统称</td>
+</tr>
+</tbody>
+</table>
+<h2 id="读取-inotify-事件"><a href="#读取-inotify-事件" class="headerlink" title="读取 inotify 事件"></a>读取 inotify 事件</h2><p>　　当监控项在监控列表中登记后，应用程序可用 read() 从 inotify 文件描述附中读取事件，以判断发生了什么事件。如果没有事件发生 read() 会一直阻塞等待，直到有事件发生。<br>　　当有事件发生后，read() 会返回一个如下类型的结构体：<br>　　<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">inotify_event</span>&#123;</span></span><br><span class="line">    <span class="keyword">int</span>         wd; <span class="comment">//该字段指明那个监控描述符发生事件</span></span><br><span class="line">    <span class="keyword">uint32_t</span>    mask; <span class="comment">//mask 返回事件位掩码，也就是告诉你发生了什么。</span></span><br><span class="line">    <span class="keyword">uint32_t</span>    cookie; </span><br><span class="line">    <span class="keyword">uint32_t</span>    len; </span><br><span class="line">    <span class="keyword">char</span>        name[]; </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>　　以上结构中，当受监控目录下有文件发生事件时，name 字段会返回一个字符串，len是该字符串的长度。当是目录本身发生事件时，name字段不使用，而len字段会被置为0.  
+　　</p>
+<h2 id="使用案例"><a href="#使用案例" class="headerlink" title="使用案例"></a>使用案例</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/inotify.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cerrno&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstdio&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;limits.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstring&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">judgeEventName</span><span class="params">(<span class="keyword">uint32_t</span> mask, <span class="built_in">std</span>::<span class="built_in">string</span> &amp;event)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_ACCESS)        event = <span class="string">"IN_ACCESS"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_ATTRIB)        event = <span class="string">"IN_ATTRIB"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_CLOSE_WRITE)   event = <span class="string">"IN_CLOSE_WRITE"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_CLOSE_NOWRITE) event = <span class="string">"IN_CLOSE_NOWRITE"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_CREATE)        event = <span class="string">"IN_CREATE"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_DELETE_SELF)   event = <span class="string">"IN_DELETE_SELF"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MODIFY)        event = <span class="string">"IN_MODIFY"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MOVE_SELF)     event = <span class="string">"IN_MOVE_SELF"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MOVED_FROM)    event = <span class="string">"IN_MOVED_FROM"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_MOVED_TO)      event = <span class="string">"IN_MOVED_TO"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_OPEN)          event = <span class="string">"IN_OPEN"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_IGNORED)       event = <span class="string">"IN_IGNORED"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_ISDIR)         event = <span class="string">"IN_ISDIR"</span>;</span><br><span class="line">    <span class="keyword">if</span>(mask &amp; IN_UNMOUNT)       event = <span class="string">"IN_UNMOUNT"</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//初始化inotify</span></span><br><span class="line">    <span class="keyword">int</span> fd = inotify_init();</span><br><span class="line">    <span class="keyword">if</span>(fd == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">"initalize inotify failed"</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//添加监控目录</span></span><br><span class="line">    <span class="keyword">int</span> wd;</span><br><span class="line">    <span class="keyword">int</span> watch_wd[<span class="number">100</span>] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; argc; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        wd = inotify_add_watch(fd, argv[i], IN_ALL_EVENTS); <span class="comment">//添加监控项目，监控所有事件</span></span><br><span class="line">        <span class="keyword">if</span>(wd &lt; <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            perror(<span class="string">"add watch failed"</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        watch_wd[i] = wd;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//监听事件</span></span><br><span class="line">    <span class="keyword">while</span>(<span class="literal">true</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">char</span> buf[(<span class="keyword">sizeof</span>(struct inotify_event) + NAME_MAX + <span class="number">1</span>) * <span class="number">10</span>]; <span class="comment">//最多支持10个文件同时发生事件</span></span><br><span class="line">        bzero(buf, <span class="keyword">sizeof</span>(buf));</span><br><span class="line">        <span class="keyword">ssize_t</span> numRead = read(fd, buf, <span class="keyword">sizeof</span>(buf));</span><br><span class="line">        <span class="keyword">if</span>(numRead &lt; <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            perror(<span class="string">"read inotify event failed"</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">char</span> *p = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">inotify_event</span> *<span class="title">event</span> = <span class="title">NULL</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span>(p = buf; p &lt; (buf + numRead); )</span><br><span class="line">        &#123;</span><br><span class="line">            event = (struct inotify_event*)p;</span><br><span class="line">            <span class="built_in">std</span>::<span class="built_in">string</span> event_name;</span><br><span class="line">            judgeEventName(event-&gt;mask, event_name);</span><br><span class="line">            <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; event_name &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">            p += <span class="keyword">sizeof</span>(struct inotify_event) + event-&gt;len;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="运行示例"><a href="#运行示例" class="headerlink" title="运行示例"></a>运行示例</h3><p><img src="https://www.flowlore.com/wp-content/uploads/2017/09/屏幕快照-.png" alt="屏幕快照 ">￼</p>
+<h3 id="代码讲解"><a href="#代码讲解" class="headerlink" title="代码讲解"></a>代码讲解</h3><p>　　代码其实并不难，但是如果你想监控一个文件被修改或覆盖，就会遇到只能检测到一次，之后再有变动就无法监测到了。经过观察后发现，这个原因是当你使用vi或者目录mv，cp时会触发IN_IGNORED或 IN_ATTRIB事件，当发生这两个事件之后需要重新调用inotify_add_watch() 再次添加对该文件的监控，这个具体使用方法我会在之后的文章将讲到，请持续关注<a href="https://www.flowlore.com" target="_blank" rel="noopener">舍予书</a>。<br>　　当然你也可以直接监控一个目录，这样该目录下的文件发生任何变动你都可以持续检测到。但这时需要注意，inotify 并不会迭代监控。也就是说你监控目录下的子目录需要你自己进行迭代监控。  
+　　</p>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          本文作者 : Lojze <br/>
+        
+        原文链接 : <a href="">http://blog.flowlore.com/passages/inotify-shi-yong-jiao-cheng/</a><br>
+        版权声明 : 版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出自<a href="https://blog.flowlore.com">《舍予书》</a>
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">分享到: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">知识 & 情怀 | 二者兼得</p>
+  
+  <button id="reward-btn">
+    
+    <span>投食</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/WeChat.png" alt="微信扫一扫, 向我投食">
+        <p class="qrcode-meta">微信扫一扫, 向我投食</p>
+      </div>
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/AliPay.jpg" alt="支付宝扫一扫, 向我投食">
+        <p class="qrcode-meta">支付宝扫一扫, 向我投食</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/C/">
+              #C++
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/inotify/">
+              #inotify
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/inotify使用教程/">
+              #inotify使用教程
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/inotify如何监控文件/">
+              #inotify如何监控文件
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/linux下监控文件变化/">
+              #linux下监控文件变化
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/linux编程/">
+              #linux编程
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        上一篇:
+        <a href="/passages/centos7-nginx-de-an-zhuang-he-pei-zhi-yi-ji-tian-k/" target="_self">CentOS7 nginx的安装和配置以及填坑</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        下一篇:
+        <a href="/passages/cfeng-zhuang-inotify-shi-xian-jian-kong-wen-jian-s/" target="_self">C++封装 inotify 实现监控文件事件</a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> 留下足迹 <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz",
+      appKey: "1m0ym3IWOSrAx7sea858S9ES",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "正确填写邮箱, 才能及时收到回复哦♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz", "1m0ym3IWOSrAx7sea858S9ES");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2017, 0, 16).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>

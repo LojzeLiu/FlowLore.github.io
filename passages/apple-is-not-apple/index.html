@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
+  
+  
+  
+  <title>苹果也许不再是苹果 | 舍予书</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="随笔,2016 MacBookPro体验,MacBookPro如何,MacBookPro让我很失望,MacBookPro评测,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+    <meta name="description" content="舍予书-是我在工作和生活中的一些心得和经验，在这里分享给大家，期望能够对你有所帮助">
+  
+
+  
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">舍予书</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              主页
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              归档
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>抓到我</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/LojzeLiu" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.zhihu.com/people/LojzeLiu/activities" 
+                    target="_blank"
+                  >
+                    知乎
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>苹果也许不再是苹果</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      发布 : 
+      2018-10-22
+    </span>
+    
+      <span>
+        分类 : 
+          <a href="/categories/随笔/">
+            随笔
+          </a>
+      </span>
+    
+    
+      <span>
+        浏览 : <span class="article-timer" data-identity="apple-is-not-apple"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <p>2017年4月我与Apple官网购买了当时最新的MacBook Pro 13寸的笔记本，到现在用了近一年半了。 对于软件方面，MacOS是我最喜欢的操作系统，没有之一。而对于这一款MacBookPro的硬件，我只能说不敢恭维啊……</p>
+<h2 id="MacBook-Pro-2011"><a href="#MacBook-Pro-2011" class="headerlink" title="MacBook Pro 2011"></a>MacBook Pro 2011</h2><p>在我写这篇博客的时候便是使用的这一款寿命达7年之久的老本，她(没错女她)是我在网上买的二手笔记本。在我手里已达4年之久，在这期间硬件没有出现任何问题（还摔过一次）。也是应为这款本本的出色表现，促使我购买了新的MacBook Pro。</p>
+<h2 id="初见MacBook-Pro-2016"><a href="#初见MacBook-Pro-2016" class="headerlink" title="初见MacBook Pro 2016"></a>初见MacBook Pro 2016</h2><p>做为一个普通的码农我并不豪，电脑是我12期分期购买的。当见到它的时候，它的外表让我如此惊艳。而对于此做出的牺牲(如磁性充电接口、如接口的减少，又如键盘手感的垃圾)让我视而不见。可随着使用时间的加长让我对其的失望程度不断增加。</p>
+<h2 id="失望：配件的昂贵"><a href="#失望：配件的昂贵" class="headerlink" title="失望：配件的昂贵"></a>失望：配件的昂贵</h2><p>我工作中喜欢使用外接显示器和键盘，并且公司的 WIFI 太过垃圾，所以一直使用的是网线。因此购买MacBookPro之后我必须买一个基座，于是乎2828元没有了。</p>
+<p><img src="https://www.flowlore.com/wp-content/uploads/2018/10/2018-10-15-10.19.50-1.png" alt="2018-10-15-10.19.50.png"></p>
+<p>过去的移动硬盘也好，U盘也罢，都是USB-A的。所以一个随身扩展也是必须的，于是乎488元没有了。 <img src="https://www.flowlore.com/wp-content/uploads/2018/10/2018-10-1510.59.12-2.png" alt="2018-10-1510.59.12.png"> 好吧，这些都不是必须的，而是为了满足我的使用习惯而投资的。那么接下来的呢？</p>
+<h2 id="失望：可耻的键盘"><a href="#失望：可耻的键盘" class="headerlink" title="失望：可耻的键盘"></a>失望：可耻的键盘</h2><p>上面说过我习惯是使用外接键盘，从购买到2017年过近8个月的时间，键盘几乎是一直没有用的。直到过年回老家期间使用了几天自带的键盘，这里要说一下并不是重度使用（谁尼玛过年还玩命工作的？）。 <img src="https://www.flowlore.com/wp-content/uploads/2018/10/IMG_4605-2.jpg" alt="IMG_4605.JPG"> 就这样简单的使用了7天左右，我发现有一个按键便不灵敏了，送到店里维修（其中的坎坷就不说了）说键盘坏了，需要更换键盘…… 好吧！看了下账单如果不是在保期间我需要支付3000+的维修费用。 维修好之后，工作人员无耻的告诉我，你的电脑马上过保了，让我花大概两千元来续保（具体金额忘记了，应就是在1400~2400之间）。尼玛，我10万的车一年保费才3000+好不。 还有，我一万多买个电脑用了8个月就坏了（关键是键盘只用了7天，还尼玛不是重度使用），你们Apple工作人员不觉得脸红吗？还好意思推销你们的产品？ 没几天便看到Apple官方发布键盘设计存在问题…… 也就是我我尼玛一万五买了个试验品？MLGB！！！！！ <img src="https://www.flowlore.com/wp-content/uploads/2018/10/2018-10-15-11.11.12-2.png" alt="2018-10-15-11.11.12.png"> 好吧！对于键盘我可以认为你是为了更薄做出的大胆尝试，我忍了。但请你下次多测试测试，OK？</p>
+<h2 id="失望：无耻的主板或者硬盘"><a href="#失望：无耻的主板或者硬盘" class="headerlink" title="失望：无耻的主板或者硬盘"></a>失望：无耻的主板或者硬盘</h2><p>在写本篇文章时我的电脑还没有维修好，甚至还没有检测出究竟哪里出了问题。维修人员说只能猜测是主板或者是硬盘出了问题，所以这里只能加个或者了。 从2017年4月到2018年10月，我使用了一年半的时候。Apple发布了最新的操作系统，我迫不及待的更新了(不是测试版)。更新不久之后我的电脑突然出现无法启动了的情况，需要启动N次才能进入系统，根据我浅显的电脑知识，我知道是找不到启动磁盘了。 于是我给Apple支持打了电话，客服让我按Commond+R进入磁盘工具对磁盘进行急救，于是悲剧了~尼玛彻底识别不到磁盘了，真的非常彻底…… 迫于无奈，我送到了三里屯的Apple店里后，得到的答复便是：应该是主板坏了，但也不排除硬盘的问题，维修大概需要一到两周的时间。好吧，看看账单7033元。客服人员对我说：好消息是我可以享受什么消费者权益法可以免费维修。 <img src="https://www.flowlore.com/wp-content/uploads/2018/10/2018-10-15-11.36.14-2.png" alt="2018-10-15-11.36.14.png"> 还记得客服说这话时的表情，感觉像是我应该感谢他八辈祖宗似的。拜托，一万五的本本，一年半的使用时间，尼玛主板坏了。你们Apple工作人员不应该觉得脸红吗？ 而且享受这样的待遇必须要有发票或者购买记录。所以小伙伴们保存好购买凭证和购买记录(这里的购买记录可以是任何记录，包括你Apple Store中的记录)。</p>
+<h2 id="真正失望也许是无望"><a href="#真正失望也许是无望" class="headerlink" title="真正失望也许是无望"></a>真正失望也许是无望</h2><p>笔记本对于我来说是一个生产工具，而一个生产工具对我来说最重要得是稳定，这也是我选择MacOS的原因之一，而其他的，比如漂亮、便携都是锦上添花的功能。 还记得当初购买MacBook Pro 给自己的理由是：这样的一个电脑可以让我非常爽的使用好多年。甚至我对朋友推荐时也是说：MacBookPro虽然贵，但是你至少可以很爽的使用8年（我的2011 MacBookPro现在也用的很爽）。 可现在，仅仅一年半…… 我所担忧的是之后过保的日子怎么办？也许对于我这样普通的码农，7033元（还要加上3000+）也许我会选择重新购买一台电脑，当然不再会是Mac……</p>
+<h2 id="Apple-愿你还是你"><a href="#Apple-愿你还是你" class="headerlink" title="Apple 愿你还是你"></a>Apple 愿你还是你</h2><p>罗嗦了这么多，其实 MacOS 此时在我心中的地位是不可撼动的。但是我期望有一个稳定而又强大的硬件支持，她(没错，是女她)不需要华美的外观，不需要多薄，她只需要稳定而强大。 让我在工作中忘记她的存在，没错，忘记她的存在。就像我们的身体，当我们注意的某一部分存在时，一定是出现问题了。</p>
+<h2 id="Apple-愿我可以依然爱你"><a href="#Apple-愿我可以依然爱你" class="headerlink" title="Apple 愿我可以依然爱你"></a>Apple 愿我可以依然爱你</h2><p>我所有写的只是我的个人使用经理，也许只是个例。好吧，我期望只是个例，毕竟你是我的信仰……</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>如果你发现任何问题或疑问，你可以在下面留言或者通过 <a href="http://weibo.com/209888563" target="_blank" rel="noopener">微博</a> 和邮箱联系我，我会第一时间给予答复。 本文出自 <a href="https://www.flowlore.com" target="_blank" rel="noopener">舍予书</a>，如需转载请保留该段声明,非常感谢。</p>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          本文作者 : Lojze <br/>
+        
+        原文链接 : <a href="">http://blog.flowlore.com/passages/apple-is-not-apple/</a><br>
+        版权声明 : 版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出自<a href="https://blog.flowlore.com">《舍予书》</a>
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">分享到: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">知识 & 情怀 | 二者兼得</p>
+  
+  <button id="reward-btn">
+    
+    <span>投食</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/WeChat.png" alt="微信扫一扫, 向我投食">
+        <p class="qrcode-meta">微信扫一扫, 向我投食</p>
+      </div>
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/images/AliPay.jpg" alt="支付宝扫一扫, 向我投食">
+        <p class="qrcode-meta">支付宝扫一扫, 向我投食</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/2016-MacBookPro体验/">
+              #2016 MacBookPro体验
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/MacBookPro如何/">
+              #MacBookPro如何
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/MacBookPro让我很失望/">
+              #MacBookPro让我很失望
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/MacBookPro评测/">
+              #MacBookPro评测
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        上一篇:
+        <a href="/passages/utf-8-to-gbd-error/" target="_self">UTF-8转码至GBK时特殊字符处理</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        下一篇:
+        <a href="/passages/ubuntu-correct-internet-access/" target="_self">Ubuntu下正确上网姿势</a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> 留下足迹 <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz",
+      appKey: "1m0ym3IWOSrAx7sea858S9ES",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "正确填写邮箱, 才能及时收到回复哦♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("uzUB22zLAhbWFqjyFoGzMaK1-gzGzoHsz", "1m0ym3IWOSrAx7sea858S9ES");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2017, 0, 16).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>
