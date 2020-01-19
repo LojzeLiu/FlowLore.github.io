@@ -8,12 +8,12 @@
   
   
   
-  <title>单例（Singleto）对象创建型模式 | 舍予书</title>
+  <title>舍予书</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   
-    <meta name="keywords" content="设计模式,设计模式,Singleto,单例模式,">
+    <meta name="keywords" content="如何开发一个APP,外包靠谱吗,开发APP,">
   
 
   <script>
@@ -176,24 +176,17 @@
 
 <div class="post">
   <h1 class="article-title">
-    <span>单例（Singleto）对象创建型模式</span>
+    <span></span>
   </h1>
   <div class="article-top-meta">
     <span>
       发布 : 
-      2017-01-16
+      2019-12-29
     </span>
     
-      <span>
-        分类 : 
-          <a href="/categories/设计模式/">
-            设计模式
-          </a>
-      </span>
-    
     
       <span>
-        浏览 : <span class="article-timer" data-identity="singleton-cpp"></span>
+        浏览 : <span class="article-timer" data-identity="how-codeing-app"></span>
       </span>
     
   </div>
@@ -202,26 +195,38 @@
 
   <div class="article-content">
     <div class="markdown-body">
-      <h3 id="意图"><a href="#意图" class="headerlink" title="意图"></a>意图</h3><blockquote>
-<p>保证一个类仅有一个实例，并提供一个访问他的全局访问点<a href="#fn-61-1">1</a>。</p>
+      <blockquote>
+<p>最近总是有人对我说：“他有一个什么什么想法，想做一个APP”。而我问他预算多少？后期怎么维护？得到的答复大多都是：“两三千够了吧……”，“一起创业吧！不需要你投钱……”，“我不懂唉！！！”。好吧！首先，年轻人有这样那样的想法是很好的，而我也很愿意和这样的朋友去交流。但我发现大多时候，人们问的都是重复而又杂乱的问题，完全是在浪费彼此的时间。于是，阿正将多年趟坑的经验整理了下，在这里分享给对此感兴趣得小伙伴，期望对你能有所帮助。当然，这期不涉及具体的技术，仅仅是经验之谈。</p>
 </blockquote>
-<h3 id="结构"><a href="#结构" class="headerlink" title="结构"></a>结构</h3><p><img src="http://www.flowlore.com/wp-content/uploads/2017/01/Main.png" alt="Main">￼</p>
-<h3 id="基本实现"><a href="#基本实现" class="headerlink" title="基本实现"></a>基本实现</h3><p><strong>Singleton.h文件</strong></p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __SINGLETON_H__</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __SINGLETON_H__</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">static</span> Singleton* <span class="title">Instanci</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    Singleton(<span class="keyword">void</span>);</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">static</span> Singleton* m_instance;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">//__SINGLETON_H__</span></span></span><br></pre></td></tr></table></figure>
-<p><strong>Singleton.cpp文件</strong></p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"Singleton.h"</span></span></span><br><span class="line"></span><br><span class="line">Singleton* Singleton::m_instance = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">Singleton* Singleton::Instanci(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(m_instance == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        m_instance = <span class="keyword">new</span> Singleton;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> m_instance;</span><br><span class="line">&#125;</span><br><span class="line">Singleton::Singleton(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"初始化!"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><strong>main.cpp文件</strong></p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"Singleton.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Singleton *s = Singleton::Instanci();</span><br><span class="line"></span><br><span class="line">    Singleton *b = Singleton::Instanci();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-<ol>
-<li><p>(摘自：摘自<a href="http://union.dangdang.com/transfer.php?from=P-331141&amp;ad_type=10&amp;sys_id=1&amp;backurl=http%3A%2F%2Fproduct.dangdang.com%2F21088369.html" target="_blank" rel="noopener">《大话设计模式》</a>)</p>
-<h3 id="适用性"><a href="#适用性" class="headerlink" title="适用性"></a>适用性</h3><ul>
-<li>在开发中，遇到一个类只能实例化一次，并且需要做到全局访问时。</li>
-<li>在开发中，单例是可通过子类化扩展的，并且客户代码无需修改就能使用扩展的实例。</li>
-</ul>
-<p><a href="#fnref-61-1">↩</a></p>
-</li>
-</ol>
+<p><strong>郑重声明：本期涉及到的人或事纯属虚构。如有雷同，不胜荣幸。</strong></p>
+<h2 id="其-实APP不仅仅是APP"><a href="#其-实APP不仅仅是APP" class="headerlink" title="其 实APP不仅仅是APP"></a>其 实APP不仅仅是APP</h2><p>​    在我们手机中很多的APP不仅仅是呈现出的那几个页面、几个按钮或几个图片那么简单。像知乎、微信、大众点评等等…… 它们背后都有着庞大的商业团队在运作，其投入的人力、物力、财力都是非常庞大的。那么一个APP到底是怎样构成的呢？</p>
+<h3 id="一个APP是由服务端和客户端构成"><a href="#一个APP是由服务端和客户端构成" class="headerlink" title="一个APP是由服务端和客户端构成"></a>一个APP是由服务端和客户端构成</h3><p>​    简单来说客户端就是我们手机中的某一个APP，而服务端就是将多个相同的APP连接在一起的超大型软件。</p>
+<p>​    客户端分为手机端和PC端，其中手机端又分为Android、IOS。而PC有MacOS、Windows、Linux等等……</p>
+<p>​    而服务端相对少一点，分为Windows和Linux。并且大部分公司都只会选择其中的一个平台。但你不要以为这样，服务端得工作量就会少。因为在业务中很大一部分逻辑都是在服务端进行的，并且服务端要考虑得也很多，如安全、性能和健壮等等。首先任何一个服务最重要的就是安全，因为服务器大多都是暴露在外网的。从而就会吸引很多的黑客攻击。阿正在工作中遇到最严重的一次攻击，不到10分钟公司损失二十多万。性能就是利用尽可能少的服务器资源，去做更多的事情，毕竟服务器还是很贵的嘛。健壮就是指服务对意外情况的应对机制，如用户有意无意的错误输入，导致数据和预期完全不一样，等等……</p>
+<h3 id="IOS、Android、小程序、PC它们的APP都是APP"><a href="#IOS、Android、小程序、PC它们的APP都是APP" class="headerlink" title="IOS、Android、小程序、PC它们的APP都是APP"></a>IOS、Android、小程序、PC它们的APP都是APP</h3><p>​    而对于客户端，虽然阿正是做服务端开发的，但也略知一二。足够忽悠…… 呃，不对，是聊聊…… 首先好多人感觉开发一个小程序要简单一些，毕竟是小程序嘛。其实从开发难度上来讲是都一样的，它也有自己的语言、规则和坑，也是需要时间去开发的，当然，这个时间是要看你的需求复杂度的。而小程序的优点是“即用即走”，也可以说其实现了跨平台。但是小程序是无法实现复杂功能的，并且其局限与某个软件。</p>
+<p>​    那么这里要问下你，IOS和Android那个开发更难？个人感觉是Android，应为 Android 需要适配各个厂家的机型，而这个过程是非常繁琐的。而IOS对于这于一点来说呢，要好一点。但不是说其开发容易，毕竟如果真的那么容易，程序员的工资就不会那么高了。</p>
+<p>​    这里我就不说什么算法、人工智能、机器学习了，因为阿正也搞不明白………</p>
+<h2 id><a href="#" class="headerlink" title=" "></a> </h2><p>​    正如前面说的，一个APP是由很多端构成的。不论是服务端的框架构建、数据规划、逻辑实现。还是客户端的交互逻辑设计，UI设计和实现，都需要专业人士去做。而这些人包括……</p>
+<h3 id="产品、美工、前端、后端、Web、测试、运营、运维还有老板"><a href="#产品、美工、前端、后端、Web、测试、运营、运维还有老板" class="headerlink" title="产品、美工、前端、后端、Web、测试、运营、运维还有老板"></a>产品、美工、前端、后端、Web、测试、运营、运维还有老板</h3><p>​    我们先来喷喷…… 啊不，是聊聊产品经理，在阿正的经历中，很多不了解这个行业的人都会觉得产品经理不重要，其实不论是前期的市场调研、还是产品的定义和设计都是离不开产品经理的。而一个APP的好坏很大一部分因素都取决于产品经理的水平。</p>
+<p>​    接下来是美工，在APP中的每一个图片、图标、甚至某一根线都是由美工画出来的。什么，用别人APP的？请出门左拐了解下什么是版权……</p>
+<p>​    而前端、后端、Web我们统称为程序员。而他们的工作就是敲代码。将产品需求中的功能实现，将美工画的每一个页面，变为软件的界面。</p>
+<p>​    测试的工作就是从各个角度使用新开发出的APP，尽可能的发现BUG。只有这样才能保证APP上架之后的稳定和用户使用的良好体验。</p>
+<p>​    至于运营和运维，其主要是在软件上线之后介入维护和推广，这个我们稍后再细聊。</p>
+<h3 id="-1"><a href="#-1" class="headerlink" title=" "></a> </h3><p>​    说到这里我们先来算算一个APP开发的成本。我们假设开发周期为三个月，我们分配一位产品，一位美工，一位后端，一位Web，而前端我们不去考虑PC端，只分配一位IOS和一位Android，还有一位测试。这里一共是7位，我们将他们的平均工资保守的估计为1.5万，那么每月需要支付的工资就是 1.5 * 7 = 10.5万，而三个月就是31.5万。</p>
+<p>​    说到这里，很多小伙伴就会说了。我看某某戒上看到只要几千就可以了嘛！你阿正是不是忽悠我？呃，好吧，他们为啥那么便宜我不知道，这里只能分享一下阿正的亲身经历了。</p>
+<p>​    在阿正成为一名程序员前的某一个晚上。突发奇想，我要做一个什么什么电商平台……（此处省略一万字）。而我想到的第一件事就是做一个网站，于是我就到某某戒上发布了一个需求，很快以2000元的价格敲定。从需求的确定到产品的交付大概使用了2个月。可使用不久之后，就迎来了一次修改。阿正尝试过找其他人修改，但要的钱比新做都贵。于是只能找原来的服务商了，仅仅很小的改动就1000元。而在很久之后我才明白，当初他们只是将某一个开源的电商软件改了改……</p>
+<p>​    当然，阿正并不是说外包不靠谱。要知道，即使在互联网公司中很多的业务也都是交给外包做的。而真正不靠谱的是我们的想当然、我们的拿来主义和我们的贪小便宜之心。</p>
+<h2 id="你以为开发完就开发完了？"><a href="#你以为开发完就开发完了？" class="headerlink" title="你以为开发完就开发完了？"></a>你以为开发完就开发完了？</h2><p>​    好，说到这里假如我们的APP已经开发完成了。那么恭喜，你踏在了起跑线之上！没错仅仅只是起跑线，接下来我们需要的是推广和维护。</p>
+<h3 id="24小时的运维和火力全开的运营"><a href="#24小时的运维和火力全开的运营" class="headerlink" title="24小时的运维和火力全开的运营"></a>24小时的运维和火力全开的运营</h3><p>​    当软件发布后，后端的服务是不能随便停止的，这时候就需要有人24小时的维护了。你以为这很简单？？我只能说你还是太年轻了。首先大部分的服务器都没有界面的，是由命令行操作的。在其对服务器的维护中需要操作很多专业的软件，而且运维人员是站在安全战争第一线的，其工作的密集度是非常大的。</p>
+<p>​    软件发布后你需要让更多的人去下载并使用你的软件，说到这里，你也许又会想：“这个该比较简单了？，可以我自己干了吧！”。没错，这个你的确可以自己做，无非就是你的软件的用户量的多少嘛。当然，自带流量的不算哦。并且在推广之前你需要知道什么是SEO、什么是竞价排名、如何申请软件著作权、以及如何上架各个应用商店等等……</p>
+<h2 id="与其让想法成为APP，不如让想法成为商业模式"><a href="#与其让想法成为APP，不如让想法成为商业模式" class="headerlink" title="与其让想法成为APP，不如让想法成为商业模式"></a>与其让想法成为APP，不如让想法成为商业模式</h2><p>​    好了，说了这么多，我想你的心已经被我一桶桶冷水浇的拔凉拔凉了吧！其实我要说的是：软件只是一个工具，是让彼此更近的纽带，就像开饭店我们需要一个店面一样。如果你仔细观察会发现，同一个店面有的人能把生意做的红红火火的，而将这个店面交给另一个人，却很快会关门大吉。同样，同一类型的APP有的人能做的很好，而有的人却一败涂地。真正的原因难道是店面不够好吗？又或是APP做的不够好吗？</p>
+<h3 id="一个APP就像一个店面，你可以卖、可以租更可以自己盖"><a href="#一个APP就像一个店面，你可以卖、可以租更可以自己盖" class="headerlink" title="一个APP就像一个店面，你可以卖、可以租更可以自己盖"></a>一个APP就像一个店面，你可以卖、可以租更可以自己盖</h3><p>​    像前面说的，APP就如一个店面，只是一个工具不要纠结于此，而是把重心放到你的商业模式之上。例如之前一位小伙伴找到我，说他想做瓜菜电商，想要做一个APP。我们简单的聊了下，发现其没有对互联网有任何的了解，就想做一个APP。而我给他的建议是先从现有的电商平台做起，可他又问我如何从电商平台做起，他不懂？好吧！！</p>
+<p>​    其实，互联网的红利时代已经过去了，不是说我们随随便便做一个APP就能挣钱，更不能说实体行业做一个APP就是成功转型了。如果你真的需要将你的生意搬到线上，我建议可以先到电商平台开一个店铺、或者到像微信公众账号、B站、抖音或知乎这样的平台注册一个账号，去尝试和试错。当有了一定的流量之后再去考虑做更多的事情。</p>
+<p>​    当然，不是说开一个店铺或维护一个平台就简单，其中也是需要学习和付出很多很多的。</p>
+<h3 id="当你踏入一个陌生行业，不学习就得教学费"><a href="#当你踏入一个陌生行业，不学习就得教学费" class="headerlink" title="当你踏入一个陌生行业，不学习就得教学费"></a>当你踏入一个陌生行业，不学习就得教学费</h3><p>​    在2010年左右，阿正刚刚接触网络的时候，那时流行的是网赚。尝试了一段时间之后我将之总结为：我有一个赚钱的秘籍，你给我多少多少钱，我教给你。当你付钱之后他会告诉你：把这句话告诉别人就可以啦。你不要笑，我相信，上当的绝对不止我一个人。而之所以会上当，也许有贪小便宜的心理，但我认为更主要的原因是在进入一个行业后，还没有搞明白其中的套路，就想着收获，而往往收获的只有教训。</p>
+<p>​    所以，我要说的就是：多学，多想。在这个互联网极为发达的今天，我们获取知识的途径很多，也很简单。只要你会使用搜索引擎，你就可以解决你遇到的大多数问题。如果你不知道什么是搜索引擎，那你该知道百度吧？我实在是不想提它。</p>
+<h2 id="-2"><a href="#-2" class="headerlink" title=" "></a> </h2><p>​    好了，就聊到这里，以上只是我的个人经验和看法，如果能对你有所帮助，还请点赞、收藏、关注、分享。如果你有任何疑问，可以在评论区提问，我会第一时间给予答复。当然你也可以添加我的微信、知乎、微博来和我聊聊你的想法。</p>
+<p>​    ok，今天就到这里，我们下期见，如果还有下期。</p>
 
     </div>
   </div>
@@ -233,7 +238,7 @@
         
           本文作者 : Lojze <br/>
         
-        原文链接 : <a href="">http://blog.flowlore.com/passages/singleton-cpp/</a><br>
+        原文链接 : <a href="">http://blog.flowlore.com/passages/how-codeing-app/</a><br>
         版权声明 : 版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出自<a href="https://blog.flowlore.com">《舍予书》</a>
         </blockquote>
       </div>
@@ -299,20 +304,20 @@
           <i class="iconfont icon-06tags"></i>标签: 
           
           <span class="span--tag">
-            <a href="/tags/设计模式/">
-              #设计模式
+            <a href="/tags/如何开发一个APP/">
+              #如何开发一个APP
             </a>
           </span>
           
           <span class="span--tag">
-            <a href="/tags/Singleto/">
-              #Singleto
+            <a href="/tags/外包靠谱吗/">
+              #外包靠谱吗
             </a>
           </span>
           
           <span class="span--tag">
-            <a href="/tags/单例模式/">
-              #单例模式
+            <a href="/tags/开发APP/">
+              #开发APP
             </a>
           </span>
           
@@ -334,12 +339,12 @@
 
   <nav class="post-navigation">
     
-    
-      <div class="nav-next">
-        下一篇:
-        <a href="/passages/strategycpp/" target="_self">策略（Strategy）模式</a>
-        <i class="iconfont icon-next"></i>
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        上一篇:
+        <a href="/passages/bug-node-of-flutter-gun-dong-yi-chang-pao-chu/" target="_self">GUG 记录-Flutter：当Flutter添加新包后IOS下滚动抛出异常</a>
       </div>
+    
     
   </nav>
 
